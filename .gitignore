@@ -66,3 +66,4 @@ coverage/
 
 # yarn integrity file
 .yarn-integrity
+.vercel
