@@ -1,0 +1,41 @@
+[
+    {
+      "phone_no": 1234567890,
+      "user_id": "user_001",
+      "email_id": "user001@example.com",
+      "pushnotification_id": "push_001",
+      "role": "worker",
+      "name": "John Doe",
+      "location_lat": 37.774900,
+      "location_long": -122.419400,
+      "is_active": true,
+      "createdAt": "2023-10-01T12:00:00Z",
+      "updatedAt": "2023-10-01T12:00:00Z"
+    },
+    {
+      "phone_no": 9876543210,
+      "user_id": "user_002",
+      "email_id": "user002@example.com",
+      "pushnotification_id": "push_002",
+      "role": "guest",
+      "name": "Jane Smith",
+      "location_lat": 34.052235,
+      "location_long": -118.243683,
+      "is_active": true,
+      "createdAt": "2023-10-02T12:00:00Z",
+      "updatedAt": "2023-10-02T12:00:00Z"
+    },
+    {
+      "phone_no": 5555555555,
+      "user_id": "user_003",
+      "email_id": null,
+      "pushnotification_id": null,
+      "role": "guest",
+      "name": "Alice Johnson",
+      "location_lat": null,
+      "location_long": null,
+      "is_active": false,
+      "createdAt": "2023-10-03T12:00:00Z",
+      "updatedAt": "2023-10-03T12:00:00Z"
+    }
+  ]
