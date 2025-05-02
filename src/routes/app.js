@@ -10,6 +10,10 @@ const setStaticUserId = (req, res, next) => {
   }else{
     console.log("db unavailable");
   }
+  sequelize.sync({ force: false}).then(() => {
+    console.log("Database synced");
+    
+  });
 
     req.user = {
       user_id: '8168dec4-0f24-48bb-a935-35388e431d17', 

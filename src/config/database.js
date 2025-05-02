@@ -11,7 +11,8 @@ const sequelize = new Sequelize(process.env.DATABASE_URL, {
   dialectModule: pg,
   dialectOptions: {
     ssl: {
-      rejectUnauthorized: false
+      require: true,
+      rejectUnauthorized: false // Accept self-signed certificates (important for Supabase/Railway)
     }
   }
 });
