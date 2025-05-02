@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
 const adminRoutes = require('./admin.routes');
+const { sequelize } = require('../models');
 app.use(express.json());
 const setStaticUserId = (req, res, next) => {
   const s=sequelize.authenticate();
