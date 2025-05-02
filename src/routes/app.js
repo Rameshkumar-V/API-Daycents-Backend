@@ -3,6 +3,13 @@ const app = express();
 const adminRoutes = require('./admin.routes');
 app.use(express.json());
 const setStaticUserId = (req, res, next) => {
+  const s=sequelize.authenticate();
+  if(s){
+    console.log("db available");
+  }else{
+    console.log("db unavailable");
+  }
+
     req.user = {
       user_id: '8168dec4-0f24-48bb-a935-35388e431d17', 
     };
