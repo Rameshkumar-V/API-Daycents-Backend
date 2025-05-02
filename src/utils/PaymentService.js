@@ -9,24 +9,24 @@ const razorpay = new Razorpay({
   key_secret: 'VfUnkonpPzQvuDTRLtZaQufE',
 });
 
-// Function to read data from JSON file
-const readData = () => {
-  if (fs.existsSync('orders.json')) {
-    const data = fs.readFileSync('orders.json');
-    return JSON.parse(data);
-  }
-  return [];
-};
+// // Function to read data from JSON file
+// const readData = () => {
+//   if (fs.existsSync('orders.json')) {
+//     const data = fs.readFileSync('orders.json');
+//     return JSON.parse(data);
+//   }
+//   return [];
+// };
 
-// Function to write data to JSON file
-const writeData = (data) => {
-  fs.writeFileSync('orders.json', JSON.stringify(data, null, 2));
-};
+// // Function to write data to JSON file
+// const writeData = (data) => {
+//   fs.writeFileSync('orders.json', JSON.stringify(data, null, 2));
+// };
 
-// Initialize orders.json if it doesn't exist
-if (!fs.existsSync('orders.json')) {
-  writeData([]);
-}
+// // Initialize orders.json if it doesn't exist
+// if (!fs.existsSync('orders.json')) {
+//   writeData([]);
+// }
 
 
 
@@ -63,7 +63,7 @@ if(!razorpay){
       receipt: order.receipt,
       status: 'created',
     });
-    writeData(orders);
+    // writeData(orders);
 
     return {status:'success',message:"Order Created Successfully",data : [order]}
 
@@ -88,12 +88,12 @@ if(!razorpay){
     const isValidSignature = validateWebhookSignature(body, razorpay_signature, secret);
     if (isValidSignature) {
       // Update the order with payment details
-      const orders = readData();
+      // const orders = readData();
       const order = orders.find(o => o.order_id === razorpay_order_id);
       if (order) {
         order.status = 'paid';
         order.payment_id = razorpay_payment_id;
-        writeData(orders);
+        // writeData(orders);
       }
       return {"status":"success",message: "Verification Successfull"};
       res.status(200).json({ status: 'ok' });
