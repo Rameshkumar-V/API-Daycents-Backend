@@ -1,29 +1,28 @@
 require('dotenv').config();
 const { Sequelize } = require('sequelize');
-const pg = require('pg');
+const {production, development} = require('./db.config');
 
-// console.log(process.env); // This will show all loaded environment variables
-
-// console.log(process.env.DATABASE_URL)
-
-const sequelize = new Sequelize(process.env.DATABASE_URL, {
-  dialect: 'postgres',
-  dialectModule: pg,
-  dialectOptions: {
-    ssl: {
-      require: true,
-      rejectUnauthorized: false // Accept self-signed certificates (important for Supabase/Railway)
-    }
-  }
-});
-
-// Test connection
-sequelize.authenticate()
+function db_connect(){
+  sequelize.authenticate()
   .then(() => {
     console.log('✅ Connected to Neon PostgreSQL successfully.');
+    return true;
   })
   .catch(err => {
     console.error('❌ Unable to connect to the database:', err);
+    return false;
   });
+}
 
+if( process.env.NODE_ENV=="production" ){
+  console.log("RUNNING : PRODUCTION");
+  var sequelize = new Sequelize(production);
+}else if( process.env.NODE_ENV=="development" ){
+  console.log("RUNNING : DEVELOPMENT")
+  var sequelize = new Sequelize(development);
+}else{
+  new Error("Database NODE_ENV not Setted Properly.")
+}
+
+// console.log(sequelize);
 module.exports = sequelize;

@@ -1,6 +1,5 @@
-// fileService.js
 const path = require('path');
-const {bucket,isConnected} = require('./firebaseConfig');
+const {bucket,isConnected} = require('../config/firebaseConfig');
 const multer = require('multer');
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage,limits: { fileSize: 5 * 1024 * 1024 } });
@@ -17,7 +16,7 @@ async function uploadFileFromBuffer(buffer, destinationFileName, contentType) {
     public: true,
   });
 
-  // Make file public (optional, or set in save options)
+  // Make file public
   await file.makePublic();
 
   const publicUrl = `https://storage.googleapis.com/${bucket.name}/${destinationFileName}`;
@@ -28,9 +27,17 @@ async function uploadFileFromBuffer(buffer, destinationFileName, contentType) {
 
 
 async function deleteFileByName(destinationFileName) {
-  const file = bucket.file(destinationFileName);
-  await file.delete();
-  console.log(`Deleted file: ${destinationFileName}`);
+
+  try{
+    const file = bucket.file(destinationFileName);
+    await file.delete();
+    console.log(`Deleted file: ${destinationFileName}`);
+    return true;
+  }catch(e){
+    console.log("error on file upload = "+e)
+    return false;
+  }
+  
 }
 
-module.exports = { uploadFileFromBuffer };
+module.exports = { uploadFileFromBuffer, deleteFileByName };

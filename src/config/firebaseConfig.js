@@ -1,4 +1,7 @@
 // firebaseConfig.js
+const { json } = require('body-parser');
+const dotenv = require('dotenv');
+dotenv.config();
 const admin = require('firebase-admin');
 
 let bucket;
@@ -7,7 +10,8 @@ let initializationPromise;
 
 async function initializeFirebase() {
   try {
-    const serviceAccount = require('./fbs.json');
+    // const serviceAccount = require('./firebase.json');
+    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_FILE);
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
       storageBucket: 'flask-test-3d74a.appspot.com', // Replace with your actual bucket name
@@ -19,6 +23,7 @@ async function initializeFirebase() {
     console.error('Error initializing Firebase Admin SDK:', error);
     bucket = null;
     isConnected = false;
+    throw new Error("SERVICE : Firebase Service Connection Error!")
   }
 }
 

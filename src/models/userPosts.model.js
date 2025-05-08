@@ -1,8 +1,12 @@
 module.exports = (sequelize, DataTypes) => {
   return sequelize.define('UserPost', {
-    id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
-    user_id: { type: DataTypes.STRING(100), allowNull: false },
-    category_id: { type: DataTypes.INTEGER, allowNull: false },
+    id:  {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true,
+    },
+    user_id: { type: DataTypes.UUID, allowNull: false },
+    category_id: { type: DataTypes.UUID, allowNull: false },
 
     title: { type: DataTypes.STRING(100), allowNull: false },
     description: { type: DataTypes.TEXT(600) },
@@ -16,6 +20,10 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.ENUM('pending', 'in_progress', 'completed','cancelled'),
       defaultValue: 'pending',
     },
+    location_lat: { type: DataTypes.DECIMAL(10, 6), allowNull: true,default:null },
+    location_long: { type: DataTypes.DECIMAL(10, 6), allowNull: true,default:null },
+    
+
   }, {
     tableName: 'user_posts',
     timestamps: true,

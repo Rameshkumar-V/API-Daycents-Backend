@@ -1,53 +1,60 @@
 const Sequelize = require('sequelize');
 const sequelize = require('../config/database');
 
-// Import Models
 const User = require('./user.model')(sequelize, Sequelize.DataTypes);
-// const Profile = require('./profile.model')(sequelize, Sequelize.DataTypes);
 const Category = require('./category.model')(sequelize, Sequelize.DataTypes);
 const UserPost = require('./userPosts.model')(sequelize, Sequelize.DataTypes);
-// const History = require('./history.model')(sequelize, Sequelize.DataTypes);
-// const Work = require('./UserTakenWorks.model')(sequelize, Sequelize.DataTypes);
-const UserPostImages = require('./UserPostImages')(sequelize, Sequelize.DataTypes);
+const UserPostImages = require('./PostImages.model')(sequelize, Sequelize.DataTypes);
 const UserTakenWorks = require('./UserTakenWorks.model')(sequelize, Sequelize.DataTypes);
+const Payment = require('./Payment.model')(sequelize, Sequelize.DataTypes);
+const admin = require('./admin.model')(sequelize, Sequelize.DataTypes);
+const Review = require('./Review.model')(sequelize, Sequelize.DataTypes);
+const Report = require('./report.model')(sequelize, Sequelize.DataTypes);
 
 // User <-> UserPost (One-to-Many)
-User.hasMany(UserPost, { foreignKey: 'id' }); // User has many UserPosts
-UserPost.belongsTo(User, { foreignKey: 'id' }); // UserPost belongs to User
-// Category <-> UserPost (One-to-Many)
+User.hasMany(UserPost, { foreignKey: 'user_id' });
+UserPost.belongsTo(User, { foreignKey: 'user_id' }); // ✔️ Matches 'user_id' in UserPost
+
+// // Category <-> UserPost (One-to-Many)
 Category.hasMany(UserPost, { foreignKey: 'category_id' });
-UserPost.belongsTo(Category, { foreignKey: 'id', as: 'Category' }); // Alias for includes
+UserPost.belongsTo(Category, { foreignKey: 'category_id', as: 'category' }); // ✔️ Make sure foreignKey matches
 
 // User have Many Works
-User.hasMany(UserTakenWorks,{
-  foreignKey: 'worker_id',
-});
-UserTakenWorks.belongsTo(User);
-// Posts Have One Work
+User.hasMany(UserTakenWorks,{foreignKey: 'worker_id'});
+UserTakenWorks.belongsTo(User,{ foreignKey: 'id', targetKey: 'id'});
+
 UserPost.hasOne(UserTakenWorks, {
   foreignKey: 'post_id',
+  as: 'takenWork', // alias when including from UserPost
 });
-UserTakenWorks.belongsTo(UserPost);
 
-
-
-// // User <-> Work (One-to-Many)
-// User.hasMany(Work, { foreignKey: 'worker_id' });
-// Work.belongsTo(User, { foreignKey: 'worker_id' });
-
+UserTakenWorks.belongsTo(UserPost, {
+  foreignKey: 'post_id',
+  as: 'post', // alias when including from UserTakenWorks
+});
 
 UserPost.hasMany(UserPostImages, { foreignKey: 'post_id' });
 UserPostImages.belongsTo(UserPost, { foreignKey: 'id' });
+
+
+// models/Review.js
+Review.belongsTo(UserPost, { foreignKey: 'post_id' });
+Review.belongsTo(User, { foreignKey: 'user_id' });  // optional, for reviewer details
+// models/UserPost.js
+UserPost.hasMany(Review, { foreignKey: 'post_id' });
+
+
+// ADMIN
 console.log("I AM WORKING !");
 
 module.exports = {
   sequelize,
   Sequelize,
   User,
-  // Profile,
   Category,
   UserPost,
-  // History,
   UserPostImages,
-  UserTakenWorks
+  UserTakenWorks,
+  Payment,
+  Admin:admin
 };

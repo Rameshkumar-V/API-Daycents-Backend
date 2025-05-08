@@ -1,87 +1,77 @@
-// history.controller.js
-const { History, User, UserPost } = require('../models');
 
-async function SaveHistroy(post){
+const { UserPost,  Category, UserTakenWorks, sequelize} = require('../models');
+
+
+
+
+
+// Getting Post Histroy
+exports.getPostHistroyByUserId= async (req, res) => {
+  
   try {
-    await History.create({
-      user_id: post.user_id,
-      post_id: post.id,
-      action: "created",
-      description: "Post logged in background",
+    
+    const userId = req.params.user_id;
+    
+    if(!userId){
+      return res.status(401).json({"message":"User Id Missing!"});
+    }
+    if(userId !== req.user.user_id)
+      { return res.status(405).json({"message": "You are not valid !"})}
+
+    const posts = await UserPost.findAll({
+      where : {"user_id":userId},
+      attributes: ['id','status',],
+      include: [{
+        model: Category,
+        attributes: ['name'],
+        as: 'category', 
+      }],
     });
-  } catch (err) {
-    console.error("History logging failed:", err);
-  }
-
-}
-// Create a new history record
-exports.createHistory = async (req, res) => {
-  try {
-    const { user_id, post_id, action, description } = req.body;
-
-    const newHistory = await History.create({
-      user_id,
-      post_id,
-      action,
-      description,
-    });
-
-    res.status(201).json(newHistory);
+    
+   return res.status(200).json({message:"Getted Posts Histroy Successfully",data : [await posts.map(e=>e.toJSON())]});
   } catch (error) {
-    res.status(500).json({ message: 'Error creating history record', error });
-  }
-};
-
-// Get history for a specific post
-exports.getPostHistory = async (req, res) => {
-  try {
-    const { post_id } = req.params;
-    const history = await History.findAll({
-      where: { post_id },
-      include: [{ model: User, as: 'User' }, { model: UserPost, as: 'UserPost' }],
-    });
-    res.status(200).json(history);
-  } catch (error) {
-    res.status(500).json({ message: 'Error fetching history for post', error });
-  }
-};
-
-// Get history of a user
-exports.getUserHistory = async (req, res) => {
-  try {
-    const { user_id } = req.params;
-    const history = await History.findAll({
-      where: { user_id },
-      limit: 10,
-  order: [['createdAt', 'DESC']], 
-      
-    });
-    res.status(200).json(history);
-  } catch (error) {
-    res.status(500).json({ message: 'Error fetching history for user', error });
+    console.log(error);
+    return res.status(500).json({ message: 'Error fetching Post Histroy!', error });
   }
 };
 
 
 
-/*
-GETTING : ALL - Work History
-*/
-exports.getUserWorkHistory = async (req,res) => {
-  const users_work_histroy = await User.findAll({
-    include : [{
-      model : Work,
-      attributes : [],
-      where: {
-        worker_id:user_id
-      },
-      include:{
-        model:UserPost,
-        attributes : ['title','status'],
 
-      }
-    }]
+//  Getting Work Histroy
+exports.getWorkHistory = async (req, res, next) => {
+  const workerId = req.params.worker_id;
+
+  if (!workerId) {
+    const err = new Error('Worker ID is required');
+    err.statusCode = 400;
+    return next(err);
   }
 
-  )
-}
+  try {
+    const workHistory = await UserTakenWorks.findAll({
+      where: { worker_id: workerId.toString() },
+      include: [
+        {
+          model: UserPost,
+          as: 'post', // Ensure this alias matches your association
+          attributes: ['category_id'],
+          include: [
+            {
+              model: Category,
+              as: 'category', // Ensure alias is correctly defined in associations
+              attributes: ['name'],
+            },
+          ],
+        },
+      ],
+    });
+
+    return res.status(200).json({
+      message: 'Work history fetched successfully',
+      data: workHistory,
+    });
+  } catch (error) {
+    return next(error); // Pass to centralized error handler
+  }
+};
