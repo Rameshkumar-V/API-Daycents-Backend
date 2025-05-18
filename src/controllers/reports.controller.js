@@ -22,7 +22,7 @@ exports.createReport = async (req, res, next) => {
 
 
 // report.controller.js
-const { Report, User } = require('../models');
+const { User } = require('../models');
 
 exports.getAllReports = async (req, res, next) => {
   try {
