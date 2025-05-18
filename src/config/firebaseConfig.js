@@ -14,7 +14,7 @@ async function initializeFirebase() {
     const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_FILE);
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
-      storageBucket: 'flask-test-3d74a.appspot.com', // Replace with your actual bucket name
+      storageBucket: process.env.FIREBASE_BUCKET_URL, // Replace with your actual bucket name
     });
     bucket = admin.storage().bucket();
     isConnected = true;
