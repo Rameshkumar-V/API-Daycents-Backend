@@ -8,7 +8,6 @@ const dev = {
 };
 
 const prod = {
-  use_env_variable: 'DATABASE_URL', // Sequelize will use process.env.DATABASE_URL
   dialect: 'postgres',
   dialectModule: pg,
   dialectOptions: {
