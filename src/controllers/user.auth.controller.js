@@ -74,7 +74,7 @@ exports.requestPasswordReset = async (req, res) => {
   if (!user) return res.status(404).json({ message: 'User not found' });
 
   const otp = await sendOTP(user.phone_no);
-  const otp = await sendOTP(phone_no);
+  // const otp = await sendOTP(phone_no);
   
 
   return res.status(200).json({ message: 'Reset OTP send to Whatsapp' });
