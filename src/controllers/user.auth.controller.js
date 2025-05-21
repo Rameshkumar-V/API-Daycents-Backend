@@ -1,6 +1,6 @@
 const {User} = require('../models');
 const bcrypt = require('bcryptjs');
-const { generateOtp, verifyOtp } = require('../services/otp.service');
+const { sendOTP, verifyOtp } = require('../services/otp.service');
 const { generateToken } = require('../utils/jwt.util');
 const { validatePhone, validateEmail } = require('../validators/userRegistervalidator');
 
@@ -13,7 +13,7 @@ exports.register = async (req, res, next) => {
     const userExists = await User.findOne({ where: { phone_no } });
     if (userExists) return res.status(400).json({ message: 'Phone already registered' });
 
-    const otp = await generateOtp(phone_no);
+    const otp = await sendOTP(phone_no);
     // TODO: Send OTP via SMS/email
     return res.status(200).json({ message: 'OTP sent', otp }); // Remove `otp` in production!
   } catch (err) {
@@ -23,7 +23,7 @@ exports.register = async (req, res, next) => {
 
 exports.verifyOtpAndCreateUser = async (req, res, next) => {
   try {
-    let { phone_no, otp, name,  password } = req.body;
+    let { phone_no, otp,   password } = req.body;
 
     if (! await verifyOtp(phone_no, otp)) return res.status(401).json({ message: 'Invalid or expired OTP' });
 
@@ -64,5 +64,37 @@ exports.login = async (req, res, next) => {
     return res.status(200).json({ token });
   } catch (err) {
     next(err);
+  }
+};
+
+exports.requestPasswordReset = async (req, res) => {
+  const { phone_no } = req.body;
+  const user = await User.findOne({ where: { phone_no: phone_no } });
+
+  if (!user) return res.status(404).json({ message: 'User not found' });
+
+  const otp = await sendOTP(user.phone_no);
+  const otp = await sendOTP(phone_no);
+  
+
+  return res.status(200).json({ message: 'Reset OTP send to Whatsapp' });
+};
+
+
+exports.resetPassword = async (req, res) => {
+  const { otp,phone_no, newPassword } = req.body;
+
+  try {
+    const is_valid = await verifyOtp(phone_no, otp);
+    if(!is_valid){return res.status(404).json({message : "Invalid OTP!"})}
+    const user = await User.findByPk(req.id);
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    await user.save();
+
+    res.json({ message: 'Password updated successfully' });
+  } catch (err) {
+    res.status(400).json({ message: 'Invalid or expired token' });
   }
 };

@@ -6,7 +6,10 @@ const {
     verifyOTPValidator,
     loginValidator } = require('../validators/userAuthValidator')
 const handleValidation = require('../middleware/validateRequest');
-
+router.post('/password-reset/request', 
+    authController.requestPasswordReset);
+router.post('/password-reset/confirm', 
+    authController.resetPassword);
 router.post('/register',
     registerValidator
     ,handleValidation, 
@@ -19,5 +22,8 @@ router.post('/login',
     loginValidator, 
     handleValidation,
     authController.login);
+
+
+    
 
 module.exports = router;
