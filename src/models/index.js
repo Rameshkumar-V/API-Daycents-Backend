@@ -34,7 +34,7 @@ UserTakenWorks.belongsTo(UserPost, {
 });
 
 UserPost.hasMany(UserPostImages, { foreignKey: 'post_id' });
-UserPostImages.belongsTo(UserPost, { foreignKey: 'id' });
+UserPostImages.belongsTo(UserPost, { foreignKey: 'post_id' });
 
 
 // models/Review.js

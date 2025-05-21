@@ -2,12 +2,14 @@ require("dotenv").config();
 const app = require('./routes/app');
 const { sequelize } = require('./models');
 
-
+if (process.env.NODE_ENV === "development") {
 sequelize.sync({ force: false,alter:false}).then(() => {
   console.log("Database synced");
   
 });
 
+}else{    sequelize.authenticate();
+}
 
 const PORT = process.env.PORT || 3000;
 
