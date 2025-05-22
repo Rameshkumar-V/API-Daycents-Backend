@@ -66,19 +66,19 @@ exports.login = async (req, res, next) => {
 
    
     const access_token = getAccessToken({
-      "user_id": newUser.id,
-      "isVerified": newUser.is_verified,
-      "role": newUser.role
+      "user_id": user.id,
+      "isVerified": user.is_verified,
+      "role": user.role
     });
     const refresh_token = getRefreshToken({
-      "user_id": newUser.id,
-      "isVerified": newUser.is_verified,
-      "role": newUser.role
+      "user_id": user.id,
+      "isVerified": user.is_verified,
+      "role": user.role
     });
     return res.status(200).json({ token : {
       access_token: access_token,
       refresh_token : refresh_token
-    }, user_id: newUser.id });
+    }, user_id: user.id });
   } catch (err) {
     next(err);
   }
