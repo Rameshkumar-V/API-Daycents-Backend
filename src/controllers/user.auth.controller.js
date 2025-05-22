@@ -1,7 +1,7 @@
 const {User} = require('../models');
 const bcrypt = require('bcryptjs');
 const { sendOTP, verifyOtp } = require('../services/otp.service');
-const { generateToken } = require('../utils/jwt.util');
+const { getAccessToken, getRefreshToken,verifyToken } = require('../utils/jwt.util');
 const { validatePhone, validateEmail } = require('../validators/userRegistervalidator');
 
 exports.register = async (req, res, next) => {
@@ -34,12 +34,20 @@ exports.verifyOtpAndCreateUser = async (req, res, next) => {
       is_verified: true,
     });
 
-    const token = generateToken({
+    const access_token = getAccessToken({
       "user_id": newUser.id,
       "isVerified": newUser.is_verified,
       "role": newUser.role
     });
-    return res.status(201).json({ message: 'User created', token });
+    const refresh_token = getRefreshToken({
+      "user_id": newUser.id,
+      "isVerified": newUser.is_verified,
+      "role": newUser.role
+    });
+    return res.status(201).json({ message: 'User created', token : {
+      access_token: access_token,
+      refresh_token : refresh_token
+    }, user_id : newUser.id });
   } catch (err) {
     next(err);
   }
@@ -56,12 +64,21 @@ exports.login = async (req, res, next) => {
       return res.status(404).json({ message: 'User Pasword Mismatch!' });
     }
 
-    const token = generateToken({
-      "user_id":user.id,
-      "role":user.role,
-    }
-    );
-    return res.status(200).json({ token });
+   
+    const access_token = getAccessToken({
+      "user_id": newUser.id,
+      "isVerified": newUser.is_verified,
+      "role": newUser.role
+    });
+    const refresh_token = getRefreshToken({
+      "user_id": newUser.id,
+      "isVerified": newUser.is_verified,
+      "role": newUser.role
+    });
+    return res.status(200).json({ token : {
+      access_token: access_token,
+      refresh_token : refresh_token
+    }, user_id: newUser.id });
   } catch (err) {
     next(err);
   }
@@ -97,4 +114,30 @@ exports.resetPassword = async (req, res) => {
   } catch (err) {
     res.status(400).json({ message: 'Invalid or expired token' });
   }
+};
+
+exports.getAccessToken = async (req, res) => {
+
+  try{
+
+
+  const refreshToken = req.body.refresh_token;
+
+  const verify = verifyToken(refreshToken);
+  
+  
+  const access_token = getAccessToken({
+    "user_id": verify.user_id,
+    "isVerified": verify.isVerified,
+    "role": verify.role
+  });
+
+  return res.status(200).json({ token : {
+    access_token: access_token
+  } });
+      
+}catch(err){
+  next(err);
+}
+
 };

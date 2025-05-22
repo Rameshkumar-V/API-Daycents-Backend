@@ -22,6 +22,9 @@ router.post('/login',
     loginValidator, 
     handleValidation,
     authController.login);
+router.post('/refresh',
+    authController.getAccessToken
+)
 
 
     
