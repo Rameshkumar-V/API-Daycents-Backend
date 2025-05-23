@@ -46,7 +46,7 @@ exports.getAllUsers = async (req, res) => {
 exports.getUser = async (req, res) => {
 
   try{
-    const userId = req.params.id;
+    const userId = req.params.user_id;
     const user = await User.findByPk(userId.toString() ,
   {
    attributes: {
@@ -59,7 +59,9 @@ exports.getUser = async (req, res) => {
   res.status(200).json({status: true, message:"User Found Successfully",data: [user]});
 
   }catch(err){
-  res.status(500).json({status: false, message:"Invalid"});
+    console.log(err);
+    next();
+  // res.status(500).json({status: false, message:"Invalid"});
   }
   
 };
