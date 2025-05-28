@@ -22,6 +22,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     location_lat: { type: DataTypes.DECIMAL(10, 6), allowNull: true,default:null },
     location_long: { type: DataTypes.DECIMAL(10, 6), allowNull: true,default:null },
+    job_date : {type:DataTypes.DATE}
     
 
   }, {

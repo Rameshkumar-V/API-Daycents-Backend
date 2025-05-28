@@ -5,7 +5,7 @@ const { sequelize } = require('./models');
 
 // DATABASE
 if (process.env.NODE_ENV === "development") {
-  sequelize.sync({ force: false,alter:false}).then(() => {
+  sequelize.sync({ force: true}).then(() => {
   console.log("Database synced");
 });
 }else
