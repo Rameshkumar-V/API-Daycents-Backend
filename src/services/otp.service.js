@@ -1,10 +1,10 @@
 const axios = require('axios');
 const redis = require('../config/redis.config');
-const twilio = require("twilio"); 
+ 
 
 require('dotenv').config();
-const OTP_EXPIRY = 300; 
-// const OTP_EXPIRY = 10; 
+// const OTP_EXPIRY = 300; 
+const OTP_EXPIRY = 10; 
 
 const generateOtp = async (phone) => {
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -22,24 +22,27 @@ const verifyOtp = async (phone, enteredOtp) => {
 
 
 
-const accountSid = process.env.TWILIO_ACCOUNT_SID;
-const authToken = process.env.TWILIO_AUTH_TOKEN;
-const client = twilio(accountSid, authToken);
 
-async function createMessage(receiver_number) {
+
+async function sendOTP(receiver_number) {
   const otp = await generateOtp(receiver_number);
   console.log(otp);
-  const message = await client.messages.create({
-    body: `Hello there! OTP is : ${otp}`,
-    from: "whatsapp:+14155238886",
-    to: `whatsapp:+91${receiver_number}`,
-  });
+  const smsUrl = `https://apihome.in/panel/api/bulksms/?key=${process.env.APIHOME_API_KEY}&mobile=${receiver_number}&otp=${otp}`;
+
+  try {
+    const response = await axios.get(smsUrl);
+    return { success: true, otp, apiResponse: response.data };
+  } catch (error) {
+    console.error('Error sending OTP:', error.message);
+    return { success: false, message: 'Failed to send OTP' };
+  }
+
 
   // console.log(message.body);
 }
 
-// createMessage(7010554788);
+// sendOTP(7010554788);
 // createMessage(9944577398);
 console.log("MESSAGE SENDED")
 
-module.exports = { generateOtp, verifyOtp,sendOTP:createMessage };
+module.exports = { generateOtp, verifyOtp,sendOTP };
