@@ -1,5 +1,5 @@
 const {  UserPost, UserTakenWorks, sequelize } = require('../models');
-
+const {userNotificationStore} = require("./notifications.controller");
 /*
  Getting Works For Worker
  */
@@ -157,6 +157,16 @@ exports.requestForWork = async (req, res, next) => {
         status: 'pending'
       }, { transaction: t });
     });
+    setImmediate(()=>userNotificationStore(
+      user_id=userId,
+      status='SUCCESS',
+      title="Request For Work",
+      message='Work requested successfully.'))
+    setImmediate(()=>userNotificationStore(
+        user_id=userRequestedWork.user_id,
+        status='MESSAGE',
+        title="Work Request",
+        message="New Worker Requested For Your Post"))
 
     return res.status(201).json({
       message: 'Work requested successfully.',
@@ -197,6 +207,11 @@ exports.declineToWork = async (req, res, next) => {
     }
 
     if (userWork.status !== 'pending') {
+      setImmediate(()=>userNotificationStore(
+        user_id=userId,
+        status='FAILED',
+        title="Request For Work Cancel. ",
+        message='Only pending work requests can be decline'))
       return res.status(409).json({ error: 'Only pending work requests can be declined' });
     }
 
@@ -210,6 +225,14 @@ exports.declineToWork = async (req, res, next) => {
       await userWork.update({ status: 'cancelled' }, { transaction: t });
       await post.update({ status: 'pending' }, { transaction: t }); // Post becomes available again
     });
+
+    setImmediate(()=>userNotificationStore(
+      user_id=userId,
+      status='SUCCESS',
+      title="Request For Work Cancel. ",
+      message='Work declined successfully'))
+
+    
 
     return res.status(200).json({
       message: 'Work declined successfully',

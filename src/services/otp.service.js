@@ -3,8 +3,8 @@ const redis = require('../config/redis.config');
  
 
 require('dotenv').config();
-// const OTP_EXPIRY = 300; 
-const OTP_EXPIRY = 10; 
+const OTP_EXPIRY = 300; 
+// const OTP_EXPIRY = 10; 
 
 const generateOtp = async (phone) => {
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -30,8 +30,9 @@ async function sendOTP(receiver_number) {
   const smsUrl = `https://apihome.in/panel/api/bulksms/?key=${process.env.APIHOME_API_KEY}&mobile=${receiver_number}&otp=${otp}`;
 
   try {
-    const response = await axios.get(smsUrl);
-    return { success: true, otp, apiResponse: response.data };
+    // const response = await axios.get(smsUrl);
+    return { success: true, otp };
+    // , apiResponse: response.data
   } catch (error) {
     console.error('Error sending OTP:', error.message);
     return { success: false, message: 'Failed to send OTP' };

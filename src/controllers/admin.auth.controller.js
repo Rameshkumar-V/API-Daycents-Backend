@@ -10,19 +10,21 @@ exports.addAdmin = async (req, res) => {
     const hashed = await bcrypt.hash(password, 10);
     const admin = await Admin.create({ username, email, password: hashed });
 
-    const token = generateToken({ id: admin.id });
+    const token = generateToken({ id: admin.id },'7d');
     await sendVerificationEmail("vrameshkumar260@gmail.com", token);
 
     res.status(201).json({ message: 'Registered! Please verify your email.' });
   } catch (err) {
+    console.log("error:"+err)
+
     res.status(500).json({ message: err.message });
   }
 };
 
 exports.verifyEmail = async (req, res) => {
   try {
-    const { token } = verifyToken(req.params.token);
-    await Admin.update({ isVerified: true }, { where: { id } });
+    const token  = verifyToken(req.params.token);
+    await Admin.update({ isVerified: true }, { where: { id:token.id } });
     res.json({ message: 'Email verified successfully' });
   } catch {
     res.status(400).json({ message: 'Invalid or expired token' });
@@ -32,15 +34,16 @@ exports.verifyEmail = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const admin = await Admin.findOne({ where: { email } });
+    const admin = await Admin.findOne({ where: { email:email } });
     if (!admin || !await bcrypt.compare(password, admin.password))
       return res.status(401).json({ message: 'Invalid credentials' });
 
     if (!admin.isVerified) return res.status(403).json({ message: 'Please verify your email' });
 
-    const token = generateToken({ id: admin.id, role: admin.role });
+    const token = generateToken({ id: admin.id, role: admin.role },'7d');
     res.json({ token });
-  } catch {
+  } catch(err) {
+    console.log(err)
     res.status(500).json({ message: 'Login failed' });
   }
 };

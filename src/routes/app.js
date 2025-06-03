@@ -45,6 +45,10 @@ app.use('/api/reports',
     Authentication, 
     require('./report.route')
 ); 
+app.use('/api/notifications',
+    Authentication, 
+    require('./notification.routes')
+);
 
 
 // ADMIN ONLY

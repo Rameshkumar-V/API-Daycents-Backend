@@ -1,7 +1,7 @@
 const { UserPost,  Category, Profile, UserPostImages, User} = require('../models');
 const haversine = require('haversine'); // Import Haversine for distance calculation
-const { Op } = require('sequelize');
-
+const { Op, where } = require('sequelize');
+const {userNotificationStore} = require("./notifications.controller");
 
 
 
@@ -22,15 +22,20 @@ exports.createUserPost = async (req, res) => {
 
     const postData = {
       ...req.body,
-      user_id: userId.toString() 
+        "user_id": userId,
+        
+      
     };
 
     // console.log("post data : "+JSON.stringify(postData))
 
     const post = await UserPost.create(postData);
 
-    // Optional: handle history logging in background
-    // setImmediate(() => SaveHistory(post));
+    setImmediate(()=>userNotificationStore(
+      user_id=userId,
+      status='SUCCESS',
+      title="Post Creation",
+      message="Post Created Successfully"))
 
     res.status(201).json({ status: true, message: "Post Created", data: post });
   } catch (err) {
@@ -50,17 +55,30 @@ exports.getAllPosts = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const sortQuery = req.query.sort || 'createdAt';
+    const category_id = req.query.category_id || 0
 
     const offset = (page - 1) * limit;
 
     const sortField = sortQuery.replace(/^-/, '');
     const sortOrder = sortQuery.startsWith('-') ? 'DESC' : 'ASC';
 
-    const { count, rows: posts } = await UserPost.findAndCountAll({
+    if(category_id){
+      var { count, rows: posts } = await UserPost.findAndCountAll({
+        limit,
+        offset,
+        where:{category_id:category_id},
+  
+        order: [[sortField, sortOrder]]
+      });
+    }else{
+
+    var { count, rows: posts } = await UserPost.findAndCountAll({
       limit,
       offset,
+
       order: [[sortField, sortOrder]]
     });
+  }
 
     const totalPages = Math.ceil(count / limit);
 
@@ -68,7 +86,7 @@ exports.getAllPosts = async (req, res) => {
       totalItems: count,
       totalPages,
       currentPage: page,
-      posts
+      data:posts
     });
   } catch (err) {
     console.error(err);
@@ -195,6 +213,7 @@ const { getBoundingBox, getDistanceFromLatLonInKm } = require('../utils/location
 
 exports.getNearbyPosts = async (req, res) => {
   let { lat, long, radius = 10, page = 1, limit = 10 } = req.query;
+  console.log("GET NEARBY POSTS : "+lat+long)
 
   lat = parseFloat(lat);
   long = parseFloat(long);
@@ -217,27 +236,33 @@ exports.getNearbyPosts = async (req, res) => {
         location_long: { [Op.between]: [bounds.minLon, bounds.maxLon] },
         status : "pending"
       },
-      attributes : ["category_id","title", "description","location_lat","location_long","createdAt"],
+      attributes : ["category_id","title", "description","location_lat","location_long","createdAt","job_date"],
       offset,
       limit,
+      raw:true
     });
 
-    // Filter posts based on actual distance within the bounding box
-    const filtered = rows.filter(post => {
+    // console.log("row="+JSON.stringify(rows));
+
+    const postsWithDistance = rows.map(post => {
       const distance = getDistanceFromLatLonInKm(
         lat,
         long,
         parseFloat(post.location_lat),
         parseFloat(post.location_long)
       );
-      return distance <= radius;
+      return { ...post, 'distance':distance };
     });
-
+    // console.log("post with distance= "+JSON.stringify(postsWithDistance));
+    
+    const filtered = postsWithDistance.filter(post => post.distance <= radius);
+    // console.log("f="+JSON.stringify(filtered));
+    
     res.json({
       total: count,
       currentPage: page,
       totalPages: Math.ceil(count / limit),
-      results: filtered,
+      data: filtered,
     });
   } catch (error) {
     console.error('Error fetching nearby posts:', error);

@@ -3,7 +3,7 @@ module.exports = (sequelize, DataTypes) => {
     id: { type:  DataTypes.UUID,   defaultValue: DataTypes.UUIDV4,  primaryKey: true },
     phone_no: { type: DataTypes.DECIMAL(10), allowNull: false, unique: true, primaryKey: true },
     email_id: { type: DataTypes.STRING(80), allowNull: true, unique: true,default : null },
-    password: { type: DataTypes.STRING(20), allowNull: false },
+    password: { type: DataTypes.STRING(100), allowNull: false },
     pushnotification_id: { type: DataTypes.STRING(100), allowNull: true, unique: true,default : null },
     role: { type: DataTypes.ENUM('worker', 'guest'), allowNull: false, defaultValue: 'guest' },// default role after Firebase sign-in
     name: { type: DataTypes.STRING(40), allowNull: true,default:null },

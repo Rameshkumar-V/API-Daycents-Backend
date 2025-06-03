@@ -20,7 +20,7 @@ exports.getPostHistroyByUserId= async (req, res) => {
 
     const posts = await UserPost.findAll({
       where : {"user_id":userId},
-      attributes: ['id','status',],
+      // attributes: ['id','status','createdAt','title'],
       include: [{
         model: Category,
         attributes: ['name'],
@@ -28,7 +28,7 @@ exports.getPostHistroyByUserId= async (req, res) => {
       }],
     });
     
-   return res.status(200).json({message:"Getted Posts Histroy Successfully",data : [await posts.map(e=>e.toJSON())]});
+   return res.status(200).json({message:"Getted Posts Histroy Successfully",data : await posts.map(e=>e.toJSON())});
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: 'Error fetching Post Histroy!', error });
@@ -55,7 +55,6 @@ exports.getWorkHistory = async (req, res, next) => {
         {
           model: UserPost,
           as: 'post', // Ensure this alias matches your association
-          attributes: ['category_id'],
           include: [
             {
               model: Category,

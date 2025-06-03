@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/user.auth.controller');
+const {Authentication} = require('../middleware/auth.middleware');
 const {
     registerValidator,
     verifyOTPValidator,
@@ -8,7 +9,9 @@ const {
 const handleValidation = require('../middleware/validateRequest');
 router.post('/password-reset/request', 
     authController.requestPasswordReset);
-router.post('/password-reset/confirm', 
+router.post('/password-reset/verfiy', 
+    authController.forgotPasswordOTPVerify);
+router.post('/password-reset/confirm', Authentication,
     authController.resetPassword);
 router.post('/register',
     registerValidator

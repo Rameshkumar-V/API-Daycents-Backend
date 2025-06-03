@@ -10,6 +10,7 @@ const Payment = require('./Payment.model')(sequelize, Sequelize.DataTypes);
 const admin = require('./admin.model')(sequelize, Sequelize.DataTypes);
 const Review = require('./Review.model')(sequelize, Sequelize.DataTypes);
 const Report = require('./report.model')(sequelize, Sequelize.DataTypes);
+const Notification = require('./Notifications.model')(sequelize, Sequelize.DataTypes);
 
 // User <-> UserPost (One-to-Many)
 User.hasMany(UserPost, { foreignKey: 'user_id' });
@@ -42,7 +43,10 @@ Review.belongsTo(UserPost, { foreignKey: 'post_id' });
 Review.belongsTo(User, { foreignKey: 'user_id' });  // optional, for reviewer details
 // models/UserPost.js
 UserPost.hasMany(Review, { foreignKey: 'post_id' });
-
+// Notification
+Notification
+User.hasMany(Notification, { foreignKey: 'user_id' });
+Notification.belongsTo(User, { foreignKey: 'user_id' }); // ✔️ Matches 'user_id' in UserPost
 
 // ADMIN
 console.log("I AM WORKING !");
@@ -56,5 +60,6 @@ module.exports = {
   UserPostImages,
   UserTakenWorks,
   Payment,
-  Admin:admin
+  Admin:admin,
+  Notification
 };
