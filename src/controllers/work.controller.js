@@ -92,6 +92,12 @@ exports.assignToWork = async (req, res, next) => {
 
       return workerRequest;
     });
+    setImmediate(()=>userNotificationStore(
+      expoPushToken=req.user.expoPushToken || '',
+      user_id=workerRequest.worker_id,
+      status='SUCCESS',
+      title="Requested Work Assigned ",
+      message='Work Assigned successfully'))
 
     return res.status(200).json({
       message: 'Work successfully assigned.',
@@ -158,11 +164,13 @@ exports.requestForWork = async (req, res, next) => {
       }, { transaction: t });
     });
     setImmediate(()=>userNotificationStore(
+      expoPushToken=req.user.expoPushToken || '',
       user_id=userId,
       status='SUCCESS',
       title="Request For Work",
       message='Work requested successfully.'))
     setImmediate(()=>userNotificationStore(
+        expoPushToken=req.user.expoPushToken || '',
         user_id=userRequestedWork.user_id,
         status='MESSAGE',
         title="Work Request",
@@ -208,6 +216,7 @@ exports.declineToWork = async (req, res, next) => {
 
     if (userWork.status !== 'pending') {
       setImmediate(()=>userNotificationStore(
+        expoPushToken=req.user.expoPushToken || '',
         user_id=userId,
         status='FAILED',
         title="Request For Work Cancel. ",
@@ -227,6 +236,7 @@ exports.declineToWork = async (req, res, next) => {
     });
 
     setImmediate(()=>userNotificationStore(
+      expoPushToken=req.user.expoPushToken || '',
       user_id=userId,
       status='SUCCESS',
       title="Request For Work Cancel. ",

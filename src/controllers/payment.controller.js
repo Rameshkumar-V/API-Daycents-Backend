@@ -65,6 +65,7 @@ exports.verifyPayment = async (req, res) => {
             await payment.save();
 
             setImmediate(()=>userNotificationStore(
+                expoPushToken=req.user.expoPushToken || '',
                 user_id=user_id,
                 status='SUCCESS',
                 title="PayMent Verification",
@@ -77,6 +78,7 @@ exports.verifyPayment = async (req, res) => {
             });
         } else {
             setImmediate(()=>userNotificationStore(
+                expoPushToken=req.user.expoPushToken || '',
                 user_id=user_id,
                 status='FAILED',
                 title="PayMent Verification",
@@ -131,6 +133,7 @@ exports.reportToVerify = async (req, res) => {
             await payment.save();
 
             setImmediate(()=>userNotificationStore(
+                expoPushToken=req.user.expoPushToken || '',
                 user_id=user_id,
                 status='SUCCESS',
                 title="PayMent Verification",
@@ -145,6 +148,7 @@ exports.reportToVerify = async (req, res) => {
         } else {
             setImmediate(()=>
                 userNotificationStore(
+                expoPushToken=req.user.expoPushToken || '',
                 user_id=user_id,
                 status='FAILED',
                 title="PayMent Verification",

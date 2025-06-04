@@ -7,7 +7,7 @@ const upload = multer({ storage: storage,limits: { fileSize: 5 * 1024 * 1024 } }
 async function uploadFileFromBuffer(buffer, destinationFileName, contentType) {
 
   if(await isConnected()){
-    console.log("connected")
+    console.log("FIREBASE: connected")
   }
   const file = bucket.file(destinationFileName);
 
@@ -20,7 +20,7 @@ async function uploadFileFromBuffer(buffer, destinationFileName, contentType) {
   await file.makePublic();
 
   const publicUrl = `https://storage.googleapis.com/${bucket.name}/${destinationFileName}`;
-  console.log(`Uploaded: ${publicUrl}`);
+  // console.log(`Uploaded: ${publicUrl}`);
 
   return publicUrl;
 }
@@ -31,10 +31,10 @@ async function deleteFileByName(destinationFileName) {
   try{
     const file = bucket.file(destinationFileName);
     await file.delete();
-    console.log(`Deleted file: ${destinationFileName}`);
+    // console.log(`Deleted file: ${destinationFileName}`);
     return true;
   }catch(e){
-    console.log("error on file upload = "+e)
+    console.log("ERROR : deleteFileByName :  "+e)
     return false;
   }
   

@@ -13,7 +13,6 @@ if (process.env.NODE_ENV === "development") {
 
 }
 
-
 const PORT = process.env.PORT || 3000;
 
 if( process.env.NODE_ENV=="production")
@@ -26,9 +25,9 @@ else if (process.env.NODE_ENV=="development")
     console.log(`Server running on http://localhost:${PORT}`);
   });
 }
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
+// app.listen(PORT, () => {
+//   console.log(`Server running on http://localhost:${PORT}`);
+// });
 
 // app.listen(PORT,'192.168.171.246', () => {
 //   console.log(`Server running on http://localhost:${PORT}`);

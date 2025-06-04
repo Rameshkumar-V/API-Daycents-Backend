@@ -1,16 +1,18 @@
 const bcrypt = require('bcryptjs');
-const { Admin } = require('../models');
+const { Admin, Roles } = require('../models');
 const { generateToken } = require('../utils/jwt.util');
 const { sendVerificationEmail } = require('../utils/mail.util');
 const {verifyToken}=require('../utils/jwt.util');
+const { where } = require('sequelize');
 
 exports.addAdmin = async (req, res) => {
   try {
     const { username, email, password } = req.body;
     const hashed = await bcrypt.hash(password, 10);
-    const admin = await Admin.create({ username, email, password: hashed });
+    const roleData = await Roles.findOne({where:{"name":"ADMIN"}})
+    const admin = await Admin.create({ username, email, password: hashed,role_id:roleData.id });
 
-    const token = generateToken({ id: admin.id },'7d');
+    const token = generateToken({ id: admin.id },'2m');
     await sendVerificationEmail("vrameshkumar260@gmail.com", token);
 
     res.status(201).json({ message: 'Registered! Please verify your email.' });
@@ -34,7 +36,13 @@ exports.verifyEmail = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const admin = await Admin.findOne({ where: { email:email } });
+    const admin = await Admin.findOne({ where: { email:email },
+      include: [
+      {
+        model: Roles,
+        as: 'role', // must match the alias in association
+        attributes: ['id', 'name'] // optional: limit fields
+      } ]});
     if (!admin || !await bcrypt.compare(password, admin.password))
       return res.status(401).json({ message: 'Invalid credentials' });
 

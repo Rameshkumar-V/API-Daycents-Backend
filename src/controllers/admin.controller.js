@@ -4,7 +4,7 @@ const { Admin } = require('../models');
 const bcrypt = require('bcryptjs');
 
 exports.getAllAdmins = async (req, res) => {
-  const admins = await Admin.findAll({ where: { role: 'admin' } });
+  const admins = await Admin.findAll();
   res.json(admins);
 };
 
@@ -13,13 +13,13 @@ exports.getAllAdmins = async (req, res) => {
 exports.updateAdmin = async (req, res) => {
   const { username, email } = req.body;
   const {admin_id} = req.params;
-  await Admin.update({ username, email }, { where: { id: admin_id, role: 'admin' } });
+  await Admin.update({ username, email }, { where: { id: admin_id } });
   res.json({ message: 'Admin updated' });
 };
 
 exports.deleteAdmin = async (req, res) => {
   const {admin_id} = req.params;
-  await Admin.destroy({ where: { id: admin_id, role: 'admin' } });
+  await Admin.destroy({ where: { id: admin_id } });
   res.json({ message: 'Admin deleted' });
 };
 

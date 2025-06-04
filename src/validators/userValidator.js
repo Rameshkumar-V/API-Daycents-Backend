@@ -52,7 +52,7 @@ const updateUserValidator = [
 
   body('role')
     .optional()
-    .isIn(['worker', 'guest']).withMessage("Role must be either 'worker' or 'guest'"),
+    .isIn(['USER', 'WORKER']).withMessage("Role must be either 'worker' or 'guest'"),
 
   body('name')
     .optional()
@@ -68,7 +68,11 @@ const updateUserValidator = [
   
   body('is_active')
     .optional()
-    .isBoolean().withMessage('is_active must be a boolean')
+    .isBoolean().withMessage('is_active must be a boolean'),
+    body('address')
+    .optional()
+    .isLength({ max: 150 }).withMessage('Address can be up to 150 characters'),
+
 ];
 
 const idParamValidator = [

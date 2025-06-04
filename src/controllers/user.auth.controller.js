@@ -1,8 +1,9 @@
-const {User} = require('../models');
+const {User, Roles} = require('../models');
 const bcrypt = require('bcryptjs');
 const { sendOTP, verifyOtp } = require('../services/otp.service');
 const { getAccessToken, getRefreshToken,verifyToken } = require('../utils/jwt.util');
 const { validatePhone, validateEmail } = require('../validators/userRegistervalidator');
+const { where } = require('sequelize');
 
 exports.register = async (req, res, next) => {
   try {
@@ -24,30 +25,24 @@ exports.register = async (req, res, next) => {
 exports.verifyOtpAndCreateUser = async (req, res, next) => {
   try {
     let { phone_no, otp,   password } = req.body;
+    let roleName = req.body.role ||  'USER';
+    let allowedRoles = ['USER','WORKER']
 
     if (! await verifyOtp(phone_no, otp)) return res.status(401).json({ message: 'Invalid or expired OTP' });
-
+    if (!allowedRoles.includes(roleName)) {
+      return res.status(401).json({ message: 'Unauthorized role' });
+    }
+    
     password = await bcrypt.hash(password, 10);
+    const RoleId = await Roles.findOne({where:{name:roleName}})
     const newUser = await User.create({
       phone_no,
       password,
+      role_id:RoleId.id,
       is_verified: true,
     });
 
-    const access_token = getAccessToken({
-      "user_id": newUser.id,
-      "isVerified": newUser.is_verified,
-      "role": newUser.role
-    });
-    const refresh_token = getRefreshToken({
-      "user_id": newUser.id,
-      "isVerified": newUser.is_verified,
-      "role": newUser.role
-    });
-    return res.status(201).json({ message: 'User created', token : {
-      access_token: access_token,
-      refresh_token : refresh_token
-    }, user_id : newUser.id });
+    return res.status(201).json({ message: 'User created Successfully', user_id : newUser.id });
   } catch (err) {
     next(err);
   }
@@ -56,7 +51,14 @@ exports.verifyOtpAndCreateUser = async (req, res, next) => {
 exports.login = async (req, res, next) => {
   try {
     const { phone_no,password } = req.body;
-    const user = await User.findOne({ where: { phone_no, is_verified: true } });
+    const user = await User.findOne({ where: { phone_no, is_verified: true },
+      include: [
+        {
+          model: Roles,
+          as: 'role', // must match the alias in association
+          attributes: ['id', 'name'] // optional: limit fields
+        }
+      ] });
 
     if (!user) return res.status(404).json({ message: 'User not found or not verified' });
 
@@ -111,7 +113,8 @@ exports.forgotPasswordOTPVerify = async (req, res) => {
     const oldUser = await User.findOne({
       where:{
         phone_no:phone_no
-      }
+      },
+      includes:[]
       
     });
 

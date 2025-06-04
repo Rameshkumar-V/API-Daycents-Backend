@@ -48,7 +48,10 @@ const postFieldsValidation = [
   body('status')
     .optional()
     .isIn(['pending', 'in_progress', 'completed', 'cancelled'])
-    .withMessage("Status must be one of: 'pending', 'in_progress', 'completed', 'cancelled'")
+    .withMessage("Status must be one of: 'pending', 'in_progress', 'completed', 'cancelled'"),
+  body('address')
+    .optional()
+    .isLength({ max: 150 }).withMessage('Address can be up to 150 characters'),
 ];
 
 const postIdParamValidator = [

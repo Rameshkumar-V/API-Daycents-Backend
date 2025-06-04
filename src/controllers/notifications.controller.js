@@ -1,4 +1,5 @@
 const { Notification,sequelize } = require('../models');
+const { sendToUser } = require('../services/Notification.service');
 
 exports.getNotifications= async(req,res)=>{ 
     try {
@@ -20,7 +21,7 @@ exports.getNotifications= async(req,res)=>{
 
 
 
-exports.userNotificationStore=(user_id,status,title,message)=>{
+exports.userNotificationStore=(user_id,status,title,message,expoPushToken='')=>{
     try{
         if(status && title && message){
             Notification.create({
@@ -31,6 +32,16 @@ exports.userNotificationStore=(user_id,status,title,message)=>{
             })
 
         }
+        setImmediate(()=>{
+          if(expoPushToken){
+            sendToUser(
+              expoPushToken,
+              title=title,
+              body= message,
+              data={"status":status}
+            )
+          }
+        })
     
     }catch(err){
         console.error("UserNotificationStore Error : "+err);

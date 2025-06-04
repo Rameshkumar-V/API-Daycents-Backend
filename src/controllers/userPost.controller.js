@@ -2,7 +2,7 @@ const { UserPost,  Category, Profile, UserPostImages, User} = require('../models
 const haversine = require('haversine'); // Import Haversine for distance calculation
 const { Op, where } = require('sequelize');
 const {userNotificationStore} = require("./notifications.controller");
-
+const { buildFilters, buildPaginationAndSorting } = require('../utils/queryBuilder');
 
 
 /*
@@ -11,23 +11,14 @@ CREATING : SINGLE -  Users Post or JOB posting.
 exports.createUserPost = async (req, res) => {
   try {
     const userId = req.user.user_id;  
-    console.log(userId+":isuserid")
 
     const user=await User.findByPk(userId);
-    console.log("USER : "+JSON.stringify(user))
-    const categoryid = req.body.category_id;
-    console.log("CAT ID :"+categoryid)
-    const cate=await Category.findByPk(categoryid.toString());
-    console.log("category : "+JSON.stringify(cate))
-
     const postData = {
       ...req.body,
         "user_id": userId,
         
       
     };
-
-    // console.log("post data : "+JSON.stringify(postData))
 
     const post = await UserPost.create(postData);
 
@@ -47,52 +38,63 @@ exports.createUserPost = async (req, res) => {
 /*
 GETTING : ALL - Users Posts
 */
-// GET /posts?page=2&limit=5&sort=-createdAt
-
 exports.getAllPosts = async (req, res) => {
   try {
-    // Parse query params
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const sortQuery = req.query.sort || 'createdAt';
-    const category_id = req.query.category_id || 0
+    const allowedFields = [
+      'category_id', 'user_id', 'status', 'amount',
+      'title', 'pincode', 'is_show', 'job_date'
+    ];
 
-    const offset = (page - 1) * limit;
+    const allowedRelations = {
+      user: ['name', 'email_id'],
+      category: ['name']
+    };
 
-    const sortField = sortQuery.replace(/^-/, '');
-    const sortOrder = sortQuery.startsWith('-') ? 'DESC' : 'ASC';
+    const { baseFilters, includeFilters } = buildFilters(req.query, allowedFields, allowedRelations);
+    const { pagination, sort, meta } = buildPaginationAndSorting(req.query);
+    
+    // RELATIONS
+    const includes = [];
 
-    if(category_id){
-      var { count, rows: posts } = await UserPost.findAndCountAll({
-        limit,
-        offset,
-        where:{category_id:category_id},
-  
-        order: [[sortField, sortOrder]]
+    if (includeFilters.user) {
+      includes.push({
+        model: User,
+        as: 'user',
+        where: includeFilters.user,
+        required: true
       });
-    }else{
+    }
 
-    var { count, rows: posts } = await UserPost.findAndCountAll({
-      limit,
-      offset,
+    if (includeFilters.category) {
+      includes.push({
+        model: Category,
+        as: 'category',
+        where: includeFilters.category,
+        required: true
+      });
+    }
 
-      order: [[sortField, sortOrder]]
+    const { count, rows: posts } = await UserPost.findAndCountAll({
+      where: baseFilters,
+      include: includes,
+      limit: pagination.limit,
+      offset: pagination.offset,
+      order: sort
     });
-  }
-
-    const totalPages = Math.ceil(count / limit);
 
     res.status(200).json({
       totalItems: count,
-      totalPages,
-      currentPage: page,
-      data:posts
+      totalPages: Math.ceil(count / pagination.limit),
+      currentPage: meta.page,
+      data: posts
     });
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to fetch posts' });
   }
 };
+
 
 
 /*
@@ -193,6 +195,16 @@ exports.updatePost = async (req, res) => {
     }
 
     await post.update(updatedPostData);
+    setImmediate(()=>{
+      if(req.user.roleName == "ADMIN" && post.is_show===false){
+        userNotificationStore(
+              expoPushToken=req.user.expoPushToken || '',
+              user_id=post.user_id,
+              status='CANCEL',
+              title="Post Banned",
+              message="Your post was banned due to fake or misleading information including address sharing.")
+      }
+    })
 
     return res.status(200).json({
       message: "Post updated successfully",

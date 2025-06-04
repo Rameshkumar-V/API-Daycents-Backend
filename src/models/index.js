@@ -11,10 +11,14 @@ const admin = require('./admin.model')(sequelize, Sequelize.DataTypes);
 const Review = require('./Review.model')(sequelize, Sequelize.DataTypes);
 const Report = require('./report.model')(sequelize, Sequelize.DataTypes);
 const Notification = require('./Notifications.model')(sequelize, Sequelize.DataTypes);
+const Roles = require('./Roles.model')(sequelize, Sequelize.DataTypes);
 
 // User <-> UserPost (One-to-Many)
 User.hasMany(UserPost, { foreignKey: 'user_id' });
 UserPost.belongsTo(User, { foreignKey: 'user_id' }); // ✔️ Matches 'user_id' in UserPost
+// User -> Roles
+User.belongsTo(Roles, { as: 'role', foreignKey: 'role_id' });
+Roles.hasMany(User, { as: 'users', foreignKey: 'role_id' });
 
 // // Category <-> UserPost (One-to-Many)
 Category.hasMany(UserPost, { foreignKey: 'category_id' });
@@ -49,6 +53,9 @@ User.hasMany(Notification, { foreignKey: 'user_id' });
 Notification.belongsTo(User, { foreignKey: 'user_id' }); // ✔️ Matches 'user_id' in UserPost
 
 // ADMIN
+admin.belongsTo(Roles, { as: 'role', foreignKey: 'role_id' });
+Roles.hasMany(admin, { as: 'admins', foreignKey: 'role_id' });
+
 console.log("I AM WORKING !");
 
 module.exports = {
@@ -61,5 +68,6 @@ module.exports = {
   UserTakenWorks,
   Payment,
   Admin:admin,
-  Notification
+  Notification,
+  Roles
 };
