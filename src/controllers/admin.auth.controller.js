@@ -13,7 +13,7 @@ exports.addAdmin = async (req, res) => {
     const admin = await Admin.create({ username, email, password: hashed,role_id:roleData.id });
 
     const token = generateToken({ id: admin.id },'2m');
-    await sendVerificationEmail("vrameshkumar260@gmail.com", token);
+    await sendVerificationEmail("daycentsdevelopment@gmail.com", token);
 
     res.status(201).json({ message: 'Registered! Please verify your email.' });
   } catch (err) {
