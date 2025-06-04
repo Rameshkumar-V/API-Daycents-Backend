@@ -3,16 +3,12 @@ const app = require('./routes/app');
 const { sequelize } = require('./models');
 const cors = require('cors');
 
-(
-  async()=>{
-    await connectRedis();
-  }
-)
 app.use(cors({
   origin: '*', // Allow all origins
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
+
 // DATABASE
 if (process.env.NODE_ENV === "development") {
   
@@ -36,9 +32,9 @@ else if (process.env.NODE_ENV=="development")
     console.log(`Server running on http://localhost:${PORT}`);
   });
 }
-// app.listen(PORT, () => {
-//   console.log(`Server running on http://localhost:${PORT}`);
-// });
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+});
 
 // app.listen(PORT,'192.168.171.246', () => {
 //   console.log(`Server running on http://localhost:${PORT}`);

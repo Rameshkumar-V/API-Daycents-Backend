@@ -4,18 +4,18 @@ const redis = require('../config/redis.config');
 
 require('dotenv').config();
 const OTP_EXPIRY = 300; 
-// const OTP_EXPIRY = 10; 
 
 const generateOtp = async (phone) => {
+
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  await redis.setEx(`otp:${phone}`, OTP_EXPIRY, otp);
+  await redis.set(`otp:${phone}`, otp, 'EX', OTP_EXPIRY);
   
   return otp;
 };
 
 const verifyOtp = async (phone, enteredOtp) => {
+
   const storedOtp = await redis.get(`otp:${phone}`);
-  console.log("VERFIY OTP : "+storedOtp);
   if (!storedOtp) return false;
   return storedOtp === enteredOtp;
 };
