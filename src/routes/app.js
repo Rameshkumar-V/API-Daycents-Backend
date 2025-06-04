@@ -10,6 +10,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // app.use(setStaticUserId);
 // USERS ONLY
+
 app.use('/api/users/auth',
         require('./user.auth.routes')
 );

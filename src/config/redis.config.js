@@ -1,40 +1,43 @@
 const { createClient } = require('redis');
 require('dotenv').config();
 
+let isConnected = false;
+
 const redis = createClient({
   url: process.env.REDIS_URL || 'redis://localhost:6379',
   socket: {
-    connectTimeout: 10000 // 10 seconds
+    connectTimeout: 10000, // 10 seconds
+    reconnectStrategy: (retries) => {
+      console.warn(`[Redis] Reconnect attempt #${retries}`);
+      return Math.min(retries * 100, 3000); // Retry with backoff
+    }
   }
 });
 
-
-redis.on('connect', () => {
-  console.log('Redis client connecting...');
-});
-
+redis.on('connect', () => console.log('[Redis] Connecting...'));
 redis.on('ready', () => {
-  console.log('Redis client connected and ready.');
+  console.log('[Redis] Connected & Ready');
+  isConnected = true;
 });
-
 redis.on('end', () => {
-  console.log('Redis client disconnected.');
+  console.warn('[Redis] Connection ended.');
+  isConnected = false;
 });
-
 redis.on('error', (err) => {
-  console.error('Redis Client Error:', err);
+  console.error('[Redis] Error:', err);
+  isConnected = false;
 });
 
-(async () => {
-  try {
-    await redis.connect();
-    console.log('Successfully connected to Redis.');
-  } catch (err) {
-    console.error('Failed to connect to Redis:', err);
-    // Exit process or handle the failure as needed
-    process.exit(1);
+const connectRedis = async () => {
+  if (!isConnected) {
+    try {
+      await redis.connect();
+      isConnected = true;
+    } catch (err) {
+      console.error('[Redis] Failed to connect:', err);
+      process.exit(1); // Optional: Fail fast
+    }
   }
-})();
+};
 
-module.exports = redis;
-
+module.exports = { redis, connectRedis };

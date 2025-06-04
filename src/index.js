@@ -1,10 +1,21 @@
 require("dotenv").config();
 const app = require('./routes/app');
 const { sequelize } = require('./models');
+const cors = require('cors');
 
-
+(
+  async()=>{
+    await connectRedis();
+  }
+)
+app.use(cors({
+  origin: '*', // Allow all origins
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 // DATABASE
 if (process.env.NODE_ENV === "development") {
+  
   sequelize.sync({ force: false}).then(() => {
   console.log("Database synced");
 });
