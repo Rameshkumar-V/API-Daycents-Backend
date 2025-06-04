@@ -30,8 +30,8 @@ async function sendOTP(receiver_number) {
   const smsUrl = `https://apihome.in/panel/api/bulksms/?key=${process.env.APIHOME_API_KEY}&mobile=${receiver_number}&otp=${otp}`;
 
   try {
-    // const response = await axios.get(smsUrl);
-    return { success: true, otp };
+    const response = await axios.get(smsUrl);
+    return { success: true };
     // , apiResponse: response.data
   } catch (error) {
     console.error('Error sending OTP:', error.message);

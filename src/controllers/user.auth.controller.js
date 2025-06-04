@@ -16,7 +16,7 @@ exports.register = async (req, res, next) => {
 
     const otp = await sendOTP(phone_no);
     // TODO: Send OTP via SMS/email
-    return res.status(200).json({ message: 'OTP sent', otp }); // Remove `otp` in production!
+    return res.status(200).json({ message: 'OTP sent' }); // Remove `otp` in production!
   } catch (err) {
     next(err);
   }
