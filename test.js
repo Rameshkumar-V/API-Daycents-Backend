@@ -10,11 +10,12 @@ const {Notification,Roles} = require('./src/models/index');
 //     "status": "SUCCESS"
 // })
 
-for (i of ["USER","WORKER"]){
+for (i of ["USER","WORKER","ADMIN"]){
     console.log('d= :>> ', i); 
     const data = Roles.create({
             "name":i
         })
+        console.log(data);
 
 }
 // const data = Roles.create({

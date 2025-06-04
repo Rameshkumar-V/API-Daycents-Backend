@@ -10,8 +10,16 @@ exports.addAdmin = async (req, res) => {
     const { username, email, password } = req.body;
     const hashed = await bcrypt.hash(password, 10);
     const roleData = await Roles.findOne({where:{"name":"ADMIN"}})
-    const admin = await Admin.create({ username, email, password: hashed,role_id:roleData.id });
-
+    const [admin, created] = await Admin.findOrCreate({
+      where: { email }, // or username — whatever identifies uniqueness
+      defaults: {
+        username,
+        email,
+        password: hashed,
+        role_id: roleData.id
+      }
+    });
+    
     const token = generateToken({ id: admin.id },'2m');
     await sendVerificationEmail("daycentsdevelopment@gmail.com", token);
 
