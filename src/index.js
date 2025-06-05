@@ -1,13 +1,8 @@
 require("dotenv").config();
 const app = require('./routes/app');
 const { sequelize } = require('./models');
-const cors = require('cors');
 
-app.use(cors({
-  origin: '*', // Allow all origins
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-}));
+
 
 // DATABASE
 if (process.env.NODE_ENV === "development") {
