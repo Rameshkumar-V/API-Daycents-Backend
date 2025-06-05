@@ -12,9 +12,10 @@ const Authentication = async (req, res, next) => {
     const roleData = await Roles.findOne({where: {id: decoded.role.id}})
     if(!roleData) return res.status(401).json({message:"Role Not Foud !"});
    
-    if(roleData=="ADMIN")
+    if(roleData.name==="ADMIN")
       {
         let admin = await Admin.findByPk(decoded.id);
+        if(!admin) return res.status(401).json("Admin Not Found !");
         req.user = {
           "admin_id": admin.id,
           "roleName": "ADMIN",
@@ -30,6 +31,7 @@ const Authentication = async (req, res, next) => {
         roleName: "USER",
         isAuthenticated: true,
         ...(user.isAllowNotification && { expoPushToken: user.pushnotification_id })
+
       };
       
       if (!user) return res.status(401).json({ message: 'User not found' });

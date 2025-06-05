@@ -43,7 +43,6 @@ exports.getAllUsers = async (req, res) => {
      
     });
 
-    const totalPages = Math.ceil(count / limit);
 
     res.status(200).json({
       totalItems: count,
