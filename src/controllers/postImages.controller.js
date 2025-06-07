@@ -22,7 +22,7 @@ exports.createUserPostImg = async (req, res) => {
       try{
         const img=await UserPostImages.create(
           {
-            post_id: 1,
+            post_id: postId,
             image_url : img_url
           })
         uploadedImages.push({
