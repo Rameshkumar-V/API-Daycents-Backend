@@ -121,7 +121,9 @@ exports.forgotPasswordOTPVerify = async (req, res) => {
     const access_token = getAccessToken({
       "user_id": oldUser.id,
       "isVerified": oldUser.is_verified,
-      "role": oldUser.role
+      "role": {
+        "id":oldUser.role_id
+      }
     });
     
   

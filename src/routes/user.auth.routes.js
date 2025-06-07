@@ -11,7 +11,7 @@ const handleValidation = require('../middleware/validateRequest');
 
 router.post('/password-reset/request',
     authController.requestPasswordReset);
-router.post('/password-reset/verfiy',
+router.post('/password-reset/verify',
     authController.forgotPasswordOTPVerify);
 router.post('/password-reset/confirm', Authentication,
     authController.resetPassword);
