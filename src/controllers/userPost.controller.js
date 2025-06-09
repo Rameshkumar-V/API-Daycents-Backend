@@ -248,7 +248,7 @@ exports.getNearbyPosts = async (req, res) => {
         location_long: { [Op.between]: [bounds.minLon, bounds.maxLon] },
         status : "pending"
       },
-      attributes : ["category_id","title", "description","location_lat","location_long","createdAt","job_date"],
+      attributes : ["category_id","title", "description","location_lat","location_long","createdAt","job_date","amount"],
       offset,
       limit,
       raw:true
