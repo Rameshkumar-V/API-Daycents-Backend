@@ -2,7 +2,7 @@ const { uploadFileFromBuffer, deleteFileByName } = require('../services/File.ser
 const  generateShortUniqueFilename  = require('../utils/uniqueFilename.js')
 const { UserPost, UserPostImages} = require('../models');
 
-exports.createUserPostImg = async (req, res) => {
+exports.createUserPostImg = async (req, res,next) => {
   try {
     
     const {post_id : postId} = req.params;
@@ -16,8 +16,10 @@ exports.createUserPostImg = async (req, res) => {
     }
     const uploadedImages = [];
     for (const file of req.files) {
+
       const uniqueName = generateShortUniqueFilename();
       const remoteFileName = `uploads/file_${postId}_${uniqueName}`;
+
       const img_url = await uploadFileFromBuffer(file.buffer, remoteFileName, file.mimetype);
       console.log("img url"+img_url);
 
@@ -43,6 +45,7 @@ exports.createUserPostImg = async (req, res) => {
    return res.status(201).json({message:"Image Uploaded Successfully",data:[uploadedImages]});
   } catch (error) {
     console.log("ERROR : 🔴 "+ error);
+    next(error);
     
   }
 }
@@ -89,6 +92,7 @@ exports.updatePostImage= async (req, res) =>{
     if (!req.files || Object.keys(req.files).length === 0) { return res.status(400).json({message:'No files were uploaded.'}); }
     
     console.log("img url"+image.image_url);
+    
     const image_name ="uploads/" + image.image_url.toString().split('/').pop().toString();
     console.log("image name : "+image_name);
     // return true;

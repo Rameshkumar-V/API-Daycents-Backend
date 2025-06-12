@@ -165,6 +165,7 @@ exports.deletePost = async (req, res, next) => {
     });
 
   } catch (err) {
+    console.log("ERROR : 🔴 "+err)
     next(err); // Forward error to global error handler
   }
 };

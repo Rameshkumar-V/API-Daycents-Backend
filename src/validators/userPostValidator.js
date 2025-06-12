@@ -55,13 +55,13 @@ const postFieldsValidation = [
 ];
 
 const postIdParamValidator = [
-  param('id')
-  .isUUID().withMessage('Post ID must be an integer')
+  param('post_id')
+  .isUUID().withMessage('Post ID must be an UUID')
 ];
 
 const getPostIdValidator = [
   param('post_id')
-  .isUUID().withMessage('Post ID must be an integer')
+  .isUUID().withMessage('Post ID must be an UUID')
 ];
 
 module.exports = {
