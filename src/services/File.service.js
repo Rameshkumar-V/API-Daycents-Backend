@@ -1,14 +1,12 @@
 const path = require('path');
-const {bucket,isConnected} = require('../config/firebaseConfig');
-const multer = require('multer');
-const storage = multer.memoryStorage();
-const upload = multer({ storage: storage,limits: { fileSize: 5 * 1024 * 1024 } });
+const {bucket} =require('../config/firebaseConfig');
 
 async function uploadFileFromBuffer(buffer, destinationFileName, contentType) {
 
-  if(await isConnected()){
-    console.log("FIREBASE: connected")
+  if(!bucket){
+    console.log("FIREBASE 🔴 : bucket not available !")
   }
+  // console.log("bucket : "+bucket)
   const file = bucket.file(destinationFileName);
 
   await file.save(buffer, {

@@ -47,6 +47,6 @@ async function sendOTP(receiver_number) {
 
 // sendOTP(7010554788);
 // createMessage(9944577398);
-console.log("MESSAGE SENDED")
+// console.log("MESSAGE SENDED")
 
 module.exports = { generateOtp, verifyOtp,sendOTP };

@@ -75,7 +75,7 @@ router.delete('/images/:image_id',
   userPostImageController.deleteUserPostImg 
 );
   
-router.patch('/images/:image_id',
+router.patch('/:post_id/images/:image_id',
   validateUpdateImage, 
   handleValidation, 
   upload.array('files', 1), 

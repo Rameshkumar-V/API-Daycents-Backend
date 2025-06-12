@@ -3,7 +3,8 @@ const  generateShortUniqueFilename  = require('../utils/uniqueFilename.js')
 const { UserPost, UserPostImages} = require('../models');
 
 exports.createUserPostImg = async (req, res) => {
- 
+  try {
+    
     const {post_id : postId} = req.params;
     if (!postId) { return res.status(401).json({message:"Post Id Missing!"}); }
     
@@ -19,13 +20,15 @@ exports.createUserPostImg = async (req, res) => {
       const remoteFileName = `uploads/file_${postId}_${uniqueName}`;
       const img_url = await uploadFileFromBuffer(file.buffer, remoteFileName, file.mimetype);
       console.log("img url"+img_url);
+
       try{
-        const img=await UserPostImages.create(
+        const img = await UserPostImages.create(
           {
             post_id: postId,
             image_url : img_url
           })
         uploadedImages.push({
+          "id":img.id,
           "img_url":img.image_url,
           "status" :"uploaded"
         })
@@ -37,15 +40,21 @@ exports.createUserPostImg = async (req, res) => {
         })
       }
     }
-    res.status(201).json({message:"Image Uploaded Successfully",data:[uploadedImages]});
+   return res.status(201).json({message:"Image Uploaded Successfully",data:[uploadedImages]});
+  } catch (error) {
+    console.log("ERROR : 🔴 "+ error);
+    
+  }
 }
 
-exports.deleteUserPostImg = async (req, res) => {
+exports.deleteUserPostImg = async (req, res, next) => {
+  try {
+    
 
   const imgId =  req.params.image_id;
-  const postId = req.params.post_id;
+  // const postId = req.params.post_id;
   
-  const userPostImg = await UserPostImages.findByPk(parseInt(imgId));
+  const userPostImg = await UserPostImages.findByPk(imgId);
   if(!userPostImg) {  return res.status(404).json({message : "Opps, Image Not Found!"}); }
 
   const image_name ="uploads/" + userPostImg.image_url.toString().split('/').pop().toString();
@@ -55,6 +64,11 @@ exports.deleteUserPostImg = async (req, res) => {
   await userPostImg.destroy();
 
   res.status(201).json({message : "Image Deleted Successfully", data : [userPostImg]});
+} catch (error) {
+  console.log("ERROR : 🔴 "+ error);
+  next(error);
+}
+
   
 };
 
@@ -69,7 +83,7 @@ exports.updatePostImage= async (req, res) =>{
     const post = await UserPost.findByPk(postId.toString());
     if (!post) {  return res.status(404).json({message:"Post  Not Found !"}); }
 
-    const image = await UserPostImages.findByPk(parseInt(imageId));
+    const image = await UserPostImages.findByPk(imageId);
     if (!post) {  return res.status(404).json({message:"Image  Not Found !"}); }
     
     if (!req.files || Object.keys(req.files).length === 0) { return res.status(400).json({message:'No files were uploaded.'}); }
