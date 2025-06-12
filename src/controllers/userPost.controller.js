@@ -1,10 +1,52 @@
-const { UserPost,  Category, Profile, UserPostImages, User} = require('../models');
+const { UserPost,  Category, User, PostIsShow, UserTakenWorks} = require('../models');
 const haversine = require('haversine'); // Import Haversine for distance calculation
 const { Op, where } = require('sequelize');
 const {userNotificationStore} = require("./notifications.controller");
 const { buildFilters, buildPaginationAndSorting } = require('../utils/queryBuilder');
 
+exports.isShow = async (req,res,next) =>{
+  try {
+    const postIsShow = await PostIsShow.findOne();
+    return res.status(201).json({"data":postIsShow,message:"Is Post Show or Not"})
+  } catch (error) {
+    next(error);
+    
+  }
+}
 
+
+exports.postRequests = async (req, res, next) =>{
+  try {
+    const {post_id} = req.params;
+    const { count, rows: users }  = await UserTakenWorks.findAndCountAll({
+      where:{
+        post_id : post_id
+      }
+    });
+    return res.status(201).json({"data":
+      {users: users,count: count},
+      message:"Posts Requests Succcessfully getted"
+    })
+    
+    
+  } catch (error) {
+    next(error)
+  }
+}
+
+exports.postIsShowUpdate = async (req,res,next) =>{
+  try {
+    const {is_show}= req.body;
+    const postIsShow = await PostIsShow.findOne();
+    postIsShow.is_show = is_show;
+    await postIsShow.update();
+    
+    return res.status(201).json({"data":postIsShow})
+  } catch (error) {
+    next(error);
+    
+  }
+}
 /*
 CREATING : SINGLE -  Users Post or JOB posting.
 */

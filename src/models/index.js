@@ -12,6 +12,7 @@ const Review = require('./Review.model')(sequelize, Sequelize.DataTypes);
 const Report = require('./report.model')(sequelize, Sequelize.DataTypes);
 const Notification = require('./Notifications.model')(sequelize, Sequelize.DataTypes);
 const Roles = require('./Roles.model')(sequelize, Sequelize.DataTypes);
+const PostIsShow = require('./postIsShow.model')(sequelize, Sequelize.DataTypes);
 
 // User <-> UserPost (One-to-Many)
 User.hasMany(UserPost, { foreignKey: 'user_id' });
@@ -69,5 +70,6 @@ module.exports = {
   Payment,
   Admin:admin,
   Notification,
-  Roles
+  Roles,
+  PostIsShow
 };

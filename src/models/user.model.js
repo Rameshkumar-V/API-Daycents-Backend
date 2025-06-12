@@ -16,7 +16,6 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.JSON, // [{ id: UUID, name: 'Plumbing' }]
       allowNull: true,
     },
-    
     known_works: {
       type: DataTypes.JSON, // e.g., ['Painting', 'Cleaning']
       allowNull: true,
