@@ -26,7 +26,7 @@ const {
 const { isAdmin } = require('../middleware/auth.middleware');
 
 // POST SECTION DISPLAY OR HIDE
-router.get('/is-show',isAdmin,
+router.get('/is-show',
   userPostController.isShow
 );
 router.patch('/is-show',isAdmin,
