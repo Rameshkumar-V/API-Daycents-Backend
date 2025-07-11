@@ -1,21 +1,24 @@
 const { verifyToken } = require('../utils/jwt.util');
-const { Admin, User } = require('../models');
+const { Admin, User, Roles } = require('../models');
+const { messaging } = require('firebase-admin');
 
 
 const Authentication = async (req, res, next) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
-    // console.log("TOEKEN : "+token)
     if (!token) return res.status(401).json({ message: 'Token required' });
 
     const decoded = verifyToken(token);
+    const roleData = await Roles.findOne({where: {id: decoded.role.id}})
+    if(!roleData) return res.status(401).json({message:"Role Not Foud !"});
    
-    if(decoded.role=="admin")
+    if(roleData.name==="ADMIN")
       {
         let admin = await Admin.findByPk(decoded.id);
-        req.admin = {
+        if(!admin) return res.status(401).json("Admin Not Found !");
+        req.user = {
           "admin_id": admin.id,
-          "role": "admin",
+          "roleName": "ADMIN",
           "isAuthenticated": true
 
         };
@@ -24,11 +27,13 @@ const Authentication = async (req, res, next) => {
     else{
       let user = await User.findByPk(decoded.user_id);
       req.user = {
-        "user_id": user.id,
-        "role": "user",
-        "isAuthenticated": true
+        user_id: user.id,
+        roleName: "USER",
+        isAuthenticated: true,
+        ...(user.isAllowNotification && { expoPushToken: user.pushnotification_id })
 
       };
+      
       if (!user) return res.status(401).json({ message: 'User not found' });
 
     }
@@ -42,14 +47,23 @@ const Authentication = async (req, res, next) => {
 };
 
 
+// middleware/roleChecks.js
 const isAdmin = (req, res, next) => {
-  if (req.admin.role !== 'admin') return res.status(403).json({ message: 'Admins only' });
+  if (req.user?.roleName !== 'ADMIN') {
+    return res.status(403).json({ message: 'Admins only' });
+  }
   next();
 };
+
 const isWorker = (req, res, next) => {
-  if (req.user.role !== 'worker') return res.status(403).json({ message: 'Worker only' });
+  if (req.user?.roleName !== 'WORKER') {
+    return res.status(403).json({ message: 'Workers only' });
+  }
   next();
 };
+
+module.exports = { isAdmin, isWorker };
+
 
 const isAuthenticated= (req, res, next) => {
   if (req.admin.isAuthenticated === false) return res.status(403).json({ message: 'Authentication Required !' });
@@ -58,7 +72,7 @@ const isAuthenticated= (req, res, next) => {
 
 
 exports.isUserOrAdmin = (req, res, next) => {
-  if (req.user.role === 'admin' || req.user.role === 'user') return next();
+  if (req.user.roleName === 'ADMIN' || req.user.roleName === 'USER') return next();
   return res.status(403).json({ message: 'Access denied' });
 };
 

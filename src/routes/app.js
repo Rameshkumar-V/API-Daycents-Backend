@@ -3,13 +3,19 @@ const app = express();
 const adminRoutes = require('./admin.routes');
 const errorHandler = require('../middleware/error.middleware');
 const {Authentication} = require('../middleware/auth.middleware');
+const cors = require('cors');
 
 // MIDDLEWARES
+app.use(cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE','PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// app.use(setStaticUserId);
 // USERS ONLY
+
 app.use('/api/users/auth',
         require('./user.auth.routes')
 );
@@ -45,6 +51,10 @@ app.use('/api/reports',
     Authentication, 
     require('./report.route')
 ); 
+app.use('/api/notifications',
+    Authentication, 
+    require('./notification.routes')
+);
 
 
 // ADMIN ONLY

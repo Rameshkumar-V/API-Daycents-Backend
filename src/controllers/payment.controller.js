@@ -4,7 +4,8 @@ const paymentService = require('../services/Payment.service');
 const crypto = require('crypto');
 
 const instance = require('../config/razorpay');
-
+const {userNotificationStore} = require("./notifications.controller");
+const { title } = require('process');
 
 exports.createOrder = async (req, res) => {
   const { user_id: userId, post_id: postId } = req.body;
@@ -33,28 +34,61 @@ exports.createOrder = async (req, res) => {
 
 
 exports.verifyPayment = async (req, res) => {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
-
     try {
-        const isValid = paymentService.verifyRazorpaySignature(
-            razorpay_order_id,
-            razorpay_payment_id,
-            razorpay_signature
-        );
+        const { user_id, post_id } = req.body;
+        if (!user_id || !post_id) {
+            return res.status(400).json({ message: "Both user_id and post_id are required." });
+        }
+        const payment = await Payment.findOne({
+            where: {
+                user_id: user_id,
+                post_id: post_id
+            }
+        });
 
-        if (!isValid) {
-            return res.status(400).json({ message: "Payment verification failed" });
+        if (!payment) {
+            return res.status(404).json({ message: "No payment found for the given user_id and post_id." });
         }
 
-        const updatedPayment = await paymentService.updatePaymentStatus(
-            razorpay_order_id,
-            razorpay_payment_id
-        );
+        const { order_id } = payment;
+        
+        const paymentDetails = await instance.orders.fetch(order_id);
+        
+        if (!paymentDetails) {
+            return res.status(404).json({ message: "Order not found in Razorpay." });
+        }
 
-        return res.status(200).json({
-            message: "Payment verified",
-            payment: updatedPayment
-        });
+
+        if (paymentDetails.status === 'paid') {
+            payment.payment_id = paymentDetails.id; 
+            payment.status = 'SUCCESS';
+            await payment.save();
+
+            setImmediate(()=>userNotificationStore(
+                expoPushToken=req.user.expoPushToken || '',
+                user_id=user_id,
+                status='SUCCESS',
+                title="PayMent Verification",
+                message="Payment successfully verified and updated."))
+
+            return res.status(200).json({
+                message: "Payment successfully verified and updated.",
+                payment: payment,
+                paymentdetails: paymentDetails
+            });
+        } else {
+            setImmediate(()=>userNotificationStore(
+                expoPushToken=req.user.expoPushToken || '',
+                user_id=user_id,
+                status='FAILED',
+                title="PayMent Verification",
+                message="Payment not completed or failed."))
+            return res.status(400).json({
+                message: "Payment not completed or failed.",
+                payment: payment,
+                paymentdetails: paymentDetails
+            });
+        }
 
     } catch (err) {
         console.error("Verification error:", err.message);
@@ -88,23 +122,42 @@ exports.reportToVerify = async (req, res) => {
         const { order_id } = payment;
 
         const paymentDetails = await instance.orders.fetch(order_id);
+        
         if (!paymentDetails) {
             return res.status(404).json({ message: "Order not found in Razorpay." });
         }
 
-        if (paymentDetails.status === 'captured') {
+        if (paymentDetails.status === 'paid') {
             payment.payment_id = paymentDetails.id; 
             payment.status = 'SUCCESS';
             await payment.save();
 
+            setImmediate(()=>userNotificationStore(
+                expoPushToken=req.user.expoPushToken || '',
+                user_id=user_id,
+                status='SUCCESS',
+                title="PayMent Verification",
+                message="Payment successfully verified and updated."))
+
+
             return res.status(200).json({
                 message: "Payment successfully verified and updated.",
-                payment: payment
+                payment: payment,
+                paymentdetails: paymentDetails
             });
         } else {
+            setImmediate(()=>
+                userNotificationStore(
+                expoPushToken=req.user.expoPushToken || '',
+                user_id=user_id,
+                status='FAILED',
+                title="PayMent Verification",
+                message="Payment not completed or failed."))
+
             return res.status(400).json({
                 message: "Payment not completed or failed.",
-                payment: payment
+                payment: payment,
+                paymentdetails: paymentDetails
             });
         }
     } catch (err) {

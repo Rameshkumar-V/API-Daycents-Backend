@@ -1,36 +1,83 @@
-const { UserPost,  Category, Profile, UserPostImages, User} = require('../models');
+const { UserPost,  Category, User, PostIsShow, UserTakenWorks} = require('../models');
 const haversine = require('haversine'); // Import Haversine for distance calculation
-const { Op } = require('sequelize');
+const { Op, where } = require('sequelize');
+const {userNotificationStore} = require("./notifications.controller");
+const { buildFilters, buildPaginationAndSorting } = require('../utils/queryBuilder');
+
+exports.isShow = async (req,res,next) =>{
+  try {
+    const postIsShow = await PostIsShow.findOne();
+    return res.status(201).json({"data":postIsShow,message:"Is Post Show or Not"})
+  } catch (error) {
+    next(error);
+    
+  }
+}
 
 
+exports.postRequests = async (req, res, next) =>{
+  try {
+    const {post_id} = req.params;
+    const { count, rows: users }  = await UserTakenWorks.findAndCountAll({
+      where:{
+        post_id : post_id
+      }
+    });
+    return res.status(201).json({"data":
+      {users: users,count: count},
+      message:"Posts Requests Succcessfully getted"
+    })
+    
+    
+  } catch (error) {
+    next(error)
+  }
+}
 
-
+exports.postIsShowUpdate = async (req,res,next) =>{
+  
+    try {
+      const { is_show } = req.body;
+  
+      // Find or create the record by UUID
+      const [postIsShow] = await PostIsShow.findOrCreate({
+        where: { id: 'f07b9142-794f-44c8-af29-18c82c4f0210' },
+        defaults: { is_show },
+      });
+  
+      // Update the value even if it was just created or already existed
+      postIsShow.is_show = is_show;
+      await postIsShow.save();
+  
+      return res.status(201).json({ data: postIsShow });
+    } catch (error) {
+      next(error);
+    }
+ 
+  
+}
 /*
 CREATING : SINGLE -  Users Post or JOB posting.
 */
 exports.createUserPost = async (req, res) => {
   try {
     const userId = req.user.user_id;  
-    console.log(userId+":isuserid")
 
     const user=await User.findByPk(userId);
-    console.log("USER : "+JSON.stringify(user))
-    const categoryid = req.body.category_id;
-    console.log("CAT ID :"+categoryid)
-    const cate=await Category.findByPk(categoryid.toString());
-    console.log("category : "+JSON.stringify(cate))
-
     const postData = {
       ...req.body,
-      user_id: userId.toString() 
+        "user_id": userId,
+        
+      
     };
-
-    // console.log("post data : "+JSON.stringify(postData))
 
     const post = await UserPost.create(postData);
 
-    // Optional: handle history logging in background
-    // setImmediate(() => SaveHistory(post));
+    setImmediate(()=>userNotificationStore(
+      user_id=userId,
+      status='SUCCESS',
+      title="Post Creation",
+      message="Post Created Successfully"))
 
     res.status(201).json({ status: true, message: "Post Created", data: post });
   } catch (err) {
@@ -42,39 +89,63 @@ exports.createUserPost = async (req, res) => {
 /*
 GETTING : ALL - Users Posts
 */
-// GET /posts?page=2&limit=5&sort=-createdAt
-
 exports.getAllPosts = async (req, res) => {
   try {
-    // Parse query params
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const sortQuery = req.query.sort || 'createdAt';
+    const allowedFields = [
+      'category_id', 'user_id', 'status', 'amount',
+      'title', 'pincode', 'is_show', 'job_date'
+    ];
 
-    const offset = (page - 1) * limit;
+    const allowedRelations = {
+      user: ['name', 'email_id'],
+      category: ['name']
+    };
 
-    const sortField = sortQuery.replace(/^-/, '');
-    const sortOrder = sortQuery.startsWith('-') ? 'DESC' : 'ASC';
+    const { baseFilters, includeFilters } = buildFilters(req.query, allowedFields, allowedRelations);
+    const { pagination, sort, meta } = buildPaginationAndSorting(req.query);
+    
+    // RELATIONS
+    const includes = [];
+
+    if (includeFilters.user) {
+      includes.push({
+        model: User,
+        as: 'user',
+        where: includeFilters.user,
+        required: true
+      });
+    }
+
+    if (includeFilters.category) {
+      includes.push({
+        model: Category,
+        as: 'category',
+        where: includeFilters.category,
+        required: true
+      });
+    }
 
     const { count, rows: posts } = await UserPost.findAndCountAll({
-      limit,
-      offset,
-      order: [[sortField, sortOrder]]
+      where: baseFilters,
+      include: includes,
+      limit: pagination.limit,
+      offset: pagination.offset,
+      order: sort
     });
-
-    const totalPages = Math.ceil(count / limit);
 
     res.status(200).json({
       totalItems: count,
-      totalPages,
-      currentPage: page,
-      posts
+      totalPages: Math.ceil(count / pagination.limit),
+      currentPage: meta.page,
+      data: posts
     });
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to fetch posts' });
   }
 };
+
 
 
 /*
@@ -145,6 +216,7 @@ exports.deletePost = async (req, res, next) => {
     });
 
   } catch (err) {
+    console.log("ERROR : 🔴 "+err)
     next(err); // Forward error to global error handler
   }
 };
@@ -175,6 +247,16 @@ exports.updatePost = async (req, res) => {
     }
 
     await post.update(updatedPostData);
+    setImmediate(()=>{
+      if(req.user.roleName == "ADMIN" && post.is_show===false){
+        userNotificationStore(
+              expoPushToken=req.user.expoPushToken || '',
+              user_id=post.user_id,
+              status='CANCEL',
+              title="Post Banned",
+              message="Your post was banned due to fake or misleading information including address sharing.")
+      }
+    })
 
     return res.status(200).json({
       message: "Post updated successfully",
@@ -195,6 +277,7 @@ const { getBoundingBox, getDistanceFromLatLonInKm } = require('../utils/location
 
 exports.getNearbyPosts = async (req, res) => {
   let { lat, long, radius = 10, page = 1, limit = 10 } = req.query;
+  console.log("GET NEARBY POSTS : "+lat+long)
 
   lat = parseFloat(lat);
   long = parseFloat(long);
@@ -217,27 +300,33 @@ exports.getNearbyPosts = async (req, res) => {
         location_long: { [Op.between]: [bounds.minLon, bounds.maxLon] },
         status : "pending"
       },
-      attributes : ["category_id","title", "description","location_lat","location_long","createdAt"],
+      // attributes : ["category_id","title", "description","location_lat","location_long","createdAt","job_date","amount"],
       offset,
       limit,
+      raw:true
     });
 
-    // Filter posts based on actual distance within the bounding box
-    const filtered = rows.filter(post => {
+    // console.log("row="+JSON.stringify(rows));
+
+    const postsWithDistance = rows.map(post => {
       const distance = getDistanceFromLatLonInKm(
         lat,
         long,
         parseFloat(post.location_lat),
         parseFloat(post.location_long)
       );
-      return distance <= radius;
+      return { ...post, 'distance':distance };
     });
-
+    // console.log("post with distance= "+JSON.stringify(postsWithDistance));
+    
+    const filtered = postsWithDistance.filter(post => post.distance <= radius);
+    // console.log("f="+JSON.stringify(filtered));
+    
     res.json({
       total: count,
       currentPage: page,
       totalPages: Math.ceil(count / limit),
-      results: filtered,
+      data: filtered,
     });
   } catch (error) {
     console.error('Error fetching nearby posts:', error);

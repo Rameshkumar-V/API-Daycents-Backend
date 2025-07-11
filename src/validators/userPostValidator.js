@@ -48,17 +48,20 @@ const postFieldsValidation = [
   body('status')
     .optional()
     .isIn(['pending', 'in_progress', 'completed', 'cancelled'])
-    .withMessage("Status must be one of: 'pending', 'in_progress', 'completed', 'cancelled'")
+    .withMessage("Status must be one of: 'pending', 'in_progress', 'completed', 'cancelled'"),
+  body('address')
+    .optional()
+    .isLength({ max: 150 }).withMessage('Address can be up to 150 characters'),
 ];
 
 const postIdParamValidator = [
-  param('id')
-  .isUUID().withMessage('Post ID must be an integer')
+  param('post_id')
+  .isUUID().withMessage('Post ID must be an UUID')
 ];
 
 const getPostIdValidator = [
   param('post_id')
-  .isUUID().withMessage('Post ID must be an integer')
+  .isUUID().withMessage('Post ID must be an UUID')
 ];
 
 module.exports = {

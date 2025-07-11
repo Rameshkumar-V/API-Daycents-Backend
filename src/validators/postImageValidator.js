@@ -7,7 +7,7 @@ const postIdParamValidator = [
 
 const imageIdParamValidator = [
   param('image_id')
-    .isInt().withMessage('image_id must be a valid integer')
+  .isUUID().withMessage('image_id must be a valid UUID')
 ];
 
 module.exports = {

@@ -11,7 +11,7 @@ const createOrFetchOrder = async (userId, postId) => {
     });
 
     const options = {
-      amount: 100, // ₹10 = 100 paise
+      amount: 100 * 10,
       currency: "INR",
       receipt: `receipt_${Date.now()}`
     };

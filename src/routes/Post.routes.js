@@ -23,7 +23,15 @@ const {
       validateDeleteImage,
       validateUpdateImage
     } = require('../validators/postImageValidator');
-  
+const { isAdmin } = require('../middleware/auth.middleware');
+
+// POST SECTION DISPLAY OR HIDE
+router.get('/is-show',
+  userPostController.isShow
+);
+router.patch('/is-show',isAdmin,
+  userPostController.postIsShowUpdate
+);
 // POSTS ROUTERS
 router.post('/',
   createPostValidator,
@@ -54,6 +62,12 @@ router.get('/:post_id',
   userPostController.getUserPost  
 );
 
+
+// requests for posts by workers
+router.get('/:post_id/requests',
+  userPostController.postRequests
+);
+
   
 // POSTS IMAGE ROUTERS
 router.get('/:post_id/images',
@@ -75,7 +89,7 @@ router.delete('/images/:image_id',
   userPostImageController.deleteUserPostImg 
 );
   
-router.patch('/images/:image_id',
+router.patch('/:post_id/images/:image_id',
   validateUpdateImage, 
   handleValidation, 
   upload.array('files', 1), 

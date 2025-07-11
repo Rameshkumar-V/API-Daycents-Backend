@@ -1,42 +1,59 @@
-const { User } = require('../models');
+const { User, Roles } = require('../models');
+const { buildFilters, buildPaginationAndSorting } = require('../utils/queryBuilder');
+const { userNotificationStore } = require('./notifications.controller');
 
 
 /* Getting All Users. */
 exports.getAllUsers = async (req, res) => {
   try {
-    // Extract query params
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const offset = (page - 1) * limit;
+    const allowedFields = [
+      'email_id', 'id', 'phone_no', 'role_id',
+       'name', 'is_active'
+    ];
 
+    const allowedRelations = {
+      role: ['name'],
+    };
+
+    const { baseFilters, includeFilters } = buildFilters(req.query, allowedFields, allowedRelations);
+    const { pagination, sort, meta } = buildPaginationAndSorting(req.query);
+    
+    // RELATIONS
+    const includes = [];
+
+    if (includeFilters.user) {
+      includes.push({
+        model: Roles,
+        as: 'roles',
+        where: includeFilters.role,
+        required: true
+      });
+    }
+
+   
     const { count, rows: users } = await User.findAndCountAll({
-      limit,
-      offset,
-      order: [['createdAt', 'DESC']],
+      where: baseFilters,
+      include: includes,
+      limit: pagination.limit,
+      offset: pagination.offset,
+      order: sort,
       attributes: {
          exclude: ['password']
        }
      
     });
 
-    const totalPages = Math.ceil(count / limit);
 
     res.status(200).json({
-      status: true,
-      message: "Successfully fetched users",
-      data: users,
-      pagination: {
-        totalItems: count,
-        totalPages,
-        currentPage: page
-      }
+      totalItems: count,
+      totalPages: Math.ceil(count / pagination.limit),
+      currentPage: meta.page,
+      data: users
     });
   } catch (err) {
     console.error("Fetch Users Error:", err.message);
     res.status(500).json({
-      status: false,
       message: "Failed to fetch users",
-      error: err.message
     });
   }
 };
@@ -97,6 +114,12 @@ exports.deleteUser = async (req, res) => {
 exports.updateUser = async (req, res) => {
   const userId = req.user.user_id;
   const updatedUserData = req.body;
+  const userRoleName = req.body.role || "USER";
+  let allowedRoles = ['USER','WORKER']
+
+  if (!allowedRoles.includes(userRoleName)) {
+    return res.status(401).json({ message: 'Unauthorized role' });
+  }
 
   try {
     const user = await User.findByPk(userId,{
@@ -108,6 +131,8 @@ exports.updateUser = async (req, res) => {
 
     // Perform the update
     await user.update(updatedUserData);
+    
+   
     res.status(200).json({
       status: true,
       data: [user],

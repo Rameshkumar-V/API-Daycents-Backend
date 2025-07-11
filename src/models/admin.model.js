@@ -8,7 +8,8 @@ module.exports  = (sequelize, DataTypes) => {
   username: { type: DataTypes.STRING, allowNull: false },
   email: { type: DataTypes.STRING, unique: true, allowNull: false },
   password: { type: DataTypes.STRING, allowNull: false },
-  role: { type: DataTypes.ENUM('admin', 'staff'), defaultValue: 'admin' },
+  role_id: { type: DataTypes.UUID, allowNull: false },
   isVerified: { type: DataTypes.BOOLEAN, defaultValue: false },
+  
 })
 };
