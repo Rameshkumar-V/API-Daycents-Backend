@@ -35,17 +35,26 @@ exports.postRequests = async (req, res, next) =>{
 }
 
 exports.postIsShowUpdate = async (req,res,next) =>{
-  try {
-    const {is_show}= req.body;
-    const postIsShow = await PostIsShow.findOne();
-    postIsShow.is_show = is_show;
-    await postIsShow.update();
-    
-    return res.status(201).json({"data":postIsShow})
-  } catch (error) {
-    next(error);
-    
-  }
+  
+    try {
+      const { is_show } = req.body;
+  
+      // Find or create the record by UUID
+      const [postIsShow] = await PostIsShow.findOrCreate({
+        where: { id: 'f07b9142-794f-44c8-af29-18c82c4f0210' },
+        defaults: { is_show },
+      });
+  
+      // Update the value even if it was just created or already existed
+      postIsShow.is_show = is_show;
+      await postIsShow.save();
+  
+      return res.status(201).json({ data: postIsShow });
+    } catch (error) {
+      next(error);
+    }
+ 
+  
 }
 /*
 CREATING : SINGLE -  Users Post or JOB posting.
